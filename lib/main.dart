@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Insta Clone',
+      title: 'Social App',
       // theme: ThemeData(
       //   // This is the theme of your application.
       //   //
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       //   brightness: Brightness.dark
       // ),
       theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-      home: const MyHomePage(title: 'Insta Home Page'),
+      home: const MyHomePage(title: 'Social App Home Page'),
     );
   }
 }
@@ -109,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.lightGreen,
+        backgroundColor: Colors.blue,
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),

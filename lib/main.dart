@@ -1,7 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:social_app/screens/login_screen.dart';
+import 'package:social_app/screens/signup_screen.dart';
 import 'package:social_app/utils/colors.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -27,7 +32,7 @@ class MyApp extends StatelessWidget {
       //   brightness: Brightness.dark
       // ),
       theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-      home: const MyHomePage(title: 'Social App Home Page'),
+      home: SignupScreen(),//const MyHomePage(title: 'Social App Home Page'),
     );
   }
 }

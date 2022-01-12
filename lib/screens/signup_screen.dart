@@ -1,6 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:social_app/resources/auth_methods.dart';
 import 'package:social_app/utils/colors.dart';
+import 'package:social_app/utils/utils.dart';
+import 'package:social_app/widgets/loading_dialog.dart';
 import 'package:social_app/widgets/text_field_input.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -11,11 +17,12 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
+  Uint8List? _image;
+  late BuildContext dialogContext;
 
   @override
   void dispose() {
@@ -27,9 +34,17 @@ class _SignupScreenState extends State<SignupScreen> {
     _bioController.dispose();
   }
 
+  Future<void> selectImage() async {
+    Uint8List img = await pickImage(ImageSource.gallery);
+    setState(() {
+      _image = img;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       // appBar: AppBar(
       //   // Here we take the value from the MyHomePage object that was created by
       //   // the App.build method, and use it to set our appbar title.
@@ -62,13 +77,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 // horizontal).
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-
                   Flexible(
                     child: Container(),
                     flex: 1,
                   ),
                   // SvgPicture.asset('assets/ic_instagram.svg', color: primaryColor, height: 64,),
-                  const SizedBox(height: 64,),
+                  const SizedBox(
+                    height: 18,
+                  ),
                   const Text(
                     'Signup',
                     style: TextStyle(
@@ -78,35 +94,51 @@ class _SignupScreenState extends State<SignupScreen> {
                       // fontFamily: 'Roboto-Regular',
                     ),
                   ),
-                  const SizedBox(height: 34,),
-                  Stack(children:[
-                    const CircleAvatar(radius: 64,
-                      backgroundImage: NetworkImage(
-                          'https://i.stack.imgur.com/l60Hf.png'),
-                      backgroundColor: Colors.white,),
-                    Positioned(
-                      bottom: -10,
-                      left: 80,
-                      child: IconButton(
-                        onPressed: selectImage,
-                        icon: const Icon(Icons.add_a_photo),
-                      ),
-                    ),
-                  ],
+                  const SizedBox(
+                    height: 30,
                   ),
-                  const SizedBox(height: 34,),
+                  Stack(
+                    children: [
+                      _image != null
+                          ? CircleAvatar(
+                              radius: 64,
+                              backgroundImage: MemoryImage(_image!),
+                              backgroundColor: Colors.white,
+                            )
+                          : const CircleAvatar(
+                              radius: 64,
+                              backgroundImage: NetworkImage('https://i.stack.imgur.com/l60Hf.png'),
+                              backgroundColor: Colors.white,
+                            ),
+                      Positioned(
+                        bottom: -10,
+                        left: 80,
+                        child: IconButton(
+                          onPressed: selectImage,
+                          icon: const Icon(Icons.add_a_photo),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 34,
+                  ),
                   TextFieldInput(
                     hintText: 'Enter your username',
                     textInputType: TextInputType.text,
                     textEditingController: _usernameController,
                   ),
-                  const SizedBox(height: 24,),
+                  const SizedBox(
+                    height: 24,
+                  ),
                   TextFieldInput(
                     hintText: 'Enter your email',
                     textInputType: TextInputType.emailAddress,
                     textEditingController: _emailController,
                   ),
-                  const SizedBox(height: 24,),
+                  const SizedBox(
+                    height: 24,
+                  ),
                   TextFieldInput(
                     hintText: 'Enter your password',
                     textInputType: TextInputType.text,
@@ -114,13 +146,17 @@ class _SignupScreenState extends State<SignupScreen> {
                     isPass: true,
                   ),
 
-                  const SizedBox(height: 24,),
+                  const SizedBox(
+                    height: 24,
+                  ),
                   TextFieldInput(
                     hintText: 'Enter your bio',
                     textInputType: TextInputType.text,
                     textEditingController: _bioController,
                   ),
-                  const SizedBox(height: 24,),
+                  const SizedBox(
+                    height: 24,
+                  ),
 
                   //Login button
                   Container(
@@ -129,7 +165,60 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(25),
                       onTap: () {
-                        _showSnackBar("Signup... Will be implemented soon!");
+                        // _showSnackBar("Signup... Will be implemented soon!");
+                        log('Sign Up clicked');
+                        bool error = false;
+                        String errorMsg = "Oops! Something went wrong.";
+                        if (_usernameController.text.trim().isEmpty) {
+                          errorMsg = "Username must not be empty";
+                          error = true;
+                          // log("Username must not be empty");
+                        } else if (_emailController.text.trim().isEmpty) {
+                          errorMsg = "Please enter a valid email address";
+                          error = true;
+                        } else if (_passwordController.text.trim().isEmpty) {
+                          errorMsg = "Password must not be empty";
+                          error = true;
+                        } else if (_bioController.text.trim().isEmpty) {
+                          errorMsg = "Bio must not be empty";
+                          error = true;
+                        } else if (_image == null) {
+                          errorMsg = "Profile picture must be set";
+                          error = true;
+                        }
+
+                        log('Error: $error');
+                        log('ErrorMsg: $errorMsg');
+                        if(!error){
+                          log('Checking email validity');
+                          bool emailValid =
+                          RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                              .hasMatch(_emailController.text.trim());
+                          if (emailValid) {
+                            FocusScope.of(context).unfocus();
+
+                            // Fetch user against email.
+                            // if found // user-id, send login request to api
+                            // if not, signup on firebase, on success send login api
+                            // authHandler.handleSignInEmail(
+                            //     userNameController.text.trim(), passwordController.text.trim(), context).then((User? user) {
+
+                            // signInRequest(_passwordController.text.trim(), _passwordController.text.trim());
+                            signUpUser();
+                            // }).catchError((e){
+                            //       if(e.message == "The email address is already in use by another account."){
+                            //         showAlertDialog(context, e.toString());
+                            //       }else{
+                            //         signInRequest(userNameController.text.trim(), passwordController.text.trim(), false);
+                            //       }
+                            //     });
+                          } else {
+                            showSnackBar(msg:"Please enter a valid email address", context: context, duration: 1200);
+                          }
+                        }else{
+                          showSnackBar(msg:errorMsg, context: context, duration: 1200);
+                        }
+
                         // if (_emailController.text.trim().isNotEmpty) {
                         //   if (_passwordController.text.trim().isNotEmpty) {
                         //     bool emailValid =
@@ -203,21 +292,31 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
 
-
                   Flexible(
                     child: Container(),
                     flex: 1,
                   ),
 
                   Row(
-                    mainAxisAlignment:MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(child: const Text("Already have an account? "), padding: const EdgeInsets.symmetric(vertical: 18),),
-                      GestureDetector( onTap: () {
-                        _showSnackBar("Login.. Will be implemented soon!");
-                      },
-                          child: Container(child: const Text("Login.", style: TextStyle( color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold),), padding: EdgeInsets.symmetric(vertical: 18),)),
-                    ],),
+                      Container(
+                        child: const Text("Already have an account? "),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                      ),
+                      GestureDetector(
+                          onTap: () {
+                            showSnackBar(msg:"Login.. Will be implemented soon!", context: context);
+                          },
+                          child: Container(
+                            child: const Text(
+                              "Login.",
+                              style: TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                          )),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -233,16 +332,69 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  void _showSnackBar(String s) {
-    const Duration _snackBarDisplayDuration = Duration(milliseconds: 500);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(s),
-        duration: _snackBarDisplayDuration,
-      ),
-    );
-  }
+  void signUpUser() async {
 
-  void selectImage() {
+    log('signUpUser():');
+    // set loading to true
+    // setState(() {
+    //   _isLoading = true;
+    // });
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          dialogContext = context;
+          return LoadingDialog();
+        });
+
+    // signup user using our authmethodds
+    String res = await AuthMethods().signUpUser(
+        email: _emailController.text,
+        pass: _passwordController.text,
+        username: _usernameController.text,
+        bio: _bioController.text,
+        imgFile: _image!);
+    // if string returned is sucess, user has been created
+    log("result: $res");
+    if (res == "success") {
+      // setState(() {
+      //   _isLoading = false;
+      // });
+      // navigate to the home screen
+      try {
+        Navigator.pop(dialogContext);
+        showSnackBar(msg:res, context: context, duration: 1500);
+      } on Exception catch (exception) {
+        // only executed if error is of type Exception
+        Navigator.pop(dialogContext);
+      } catch (error) {
+        // executed for errors of all types other than Exception
+        Navigator.pop(dialogContext);
+      }
+      // Navigator.of(context).pushReplacement(
+      //   MaterialPageRoute(
+      //     builder: (context) => const ResponsiveLayout(
+      //       mobileScreenLayout: MobileScreenLayout(),
+      //       webScreenLayout: WebScreenLayout(),
+      //     ),
+      //   ),
+      // );
+    } else {
+      // setState(() {
+      //   _isLoading = false;
+      // });
+      // show the error
+
+      try {
+        Navigator.pop(dialogContext);
+        showSnackBar(msg:res, context: context, duration: 2500);
+      } on Exception catch (exception) {
+        // only executed if error is of type Exception
+        Navigator.pop(dialogContext);
+      } catch (error) {
+        // executed for errors of all types other than Exception
+        Navigator.pop(dialogContext);
+      }
+    }
   }
 }

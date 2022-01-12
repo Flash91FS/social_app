@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       //   brightness: Brightness.dark
       // ),
       theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-      home: LoginScreen(),//const MyHomePage(title: 'Social App Home Page'),
+      home: LoginScreen(),// const MyHomePage(title: 'Social App Home Page'),
     );
   }
 }

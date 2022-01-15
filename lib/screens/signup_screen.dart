@@ -3,11 +3,17 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
+import 'package:social_app/screens/home_screen_layout.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:social_app/utils/utils.dart';
 import 'package:social_app/widgets/loading_dialog.dart';
 import 'package:social_app/widgets/text_field_input.dart';
+import 'package:social_app/widgets/text_field_widget.dart';
+
+import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -16,13 +22,22 @@ class SignupScreen extends StatefulWidget {
   _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   Uint8List? _image;
   late BuildContext dialogContext;
+  GlobalKey _widgetKey = GlobalKey();
+  // Set the initial position to something that will be offscreen for sure
+  Tween<Offset> tween = Tween<Offset>(
+    begin: Offset(10000.0, 0.0),
+    end: Offset(0.0, 0.0),
+  );
+  late Animation<Offset> animation;
+  late AnimationController animationController;
 
   @override
   void dispose() {
@@ -30,8 +45,58 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
+    animationController.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // initialize animation controller and the animation itself
+    animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    animation = tween.animate(animationController);
+    // animationController2 = AnimationController(
+    //   vsync: this,
+    //   duration: const Duration(milliseconds: 500),
+    // );
+    // animation2 = tween.animate(animationController2);
+
+    Future<void>.delayed(const Duration(milliseconds: 200), () {
+      // Get the screen size
+      final Size screenSize = MediaQuery.of(context).size;
+      // Get render box of the widget
+      final RenderBox widgetRenderBox = _widgetKey.currentContext!.findRenderObject() as RenderBox;
+      // Get widget's size
+      final Size widgetSize = widgetRenderBox.size;
+
+      // Calculate the dy offset.
+      // We divide the screen height by 2 because the initial position of the widget is centered.
+      // Ceil the value, so we get a position that is a bit lower the bottom edge of the screen.
+      // final double offset = (screenSize.height / 2 / widgetSize.height).ceilToDouble();
+      final double offset22 = (screenSize.width / 2 / widgetSize.width).ceilToDouble();
+
+      // Re-set the tween and animation
+      tween = Tween<Offset>(
+        // begin: Offset(0.0, offset),
+        begin: Offset(offset22, 0.0),
+        end: const Offset(0.0, 0.0),
+      );
+      animation = tween.animate(animationController);
+      // animation2 = tween.animate(animationController2);
+
+      // Call set state to re-render the widget with the new position.
+      setState(() {
+        // Animate it.
+        animationController.forward();
+        // animationController2.forward();
+      });
+    });
   }
 
   Future<void> selectImage() async {
@@ -43,6 +108,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final model = Provider.of<LoginProvider>(context);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       // appBar: AppBar(
@@ -52,7 +120,7 @@ class _SignupScreenState extends State<SignupScreen> {
       // ),
       body: SafeArea(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 32),
           // color: Colors.blue,
           width: double.infinity,
           child: Center(
@@ -61,6 +129,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Container(
               // color: Colors.red,
               child: Column(
+                key: _widgetKey,
                 // Column is also a layout widget. It takes a list of children and
                 // arranges them vertically. By default, it sizes itself to fit its
                 // children horizontally, and tries to be as tall as its parent.
@@ -123,40 +192,103 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(
                     height: 34,
                   ),
-                  TextFieldInput(
-                    hintText: 'Enter your username',
-                    textInputType: TextInputType.text,
-                    textEditingController: _usernameController,
+
+                  SlideTransition(
+                    position: animation,
+                    child: TextFieldWidget(
+                      hintText: 'Full Name',
+                      textInputType: TextInputType.text,
+                      textEditingController: _bioController,
+                      prefixIconData: Icons.account_circle_outlined,
+                    ),
                   ),
                   const SizedBox(
                     height: 24,
                   ),
-                  TextFieldInput(
-                    hintText: 'Enter your email',
-                    textInputType: TextInputType.emailAddress,
-                    textEditingController: _emailController,
+
+                  // TextFieldInput(
+                  //   hintText: 'Enter your username',
+                  //   textInputType: TextInputType.text,
+                  //   textEditingController: _usernameController,
+                  // ),
+                  SlideTransition(
+                    position: animation,
+                    child: TextFieldWidget(
+                      hintText: 'Username',
+                      textInputType: TextInputType.text,
+                      textEditingController: _usernameController,
+                      prefixIconData: Icons.account_circle_outlined,
+                    ),
                   ),
                   const SizedBox(
                     height: 24,
                   ),
-                  TextFieldInput(
-                    hintText: 'Enter your password',
-                    textInputType: TextInputType.text,
-                    textEditingController: _passwordController,
-                    isPass: true,
+                  // TextFieldInput(
+                  //   hintText: 'Enter your email',
+                  //   textInputType: TextInputType.emailAddress,
+                  //   textEditingController: _emailController,
+                  // ),
+                  SlideTransition(
+                    position: animation,
+                    child: TextFieldWidget(
+                      hintText: 'Email',
+                      textInputType: TextInputType.emailAddress,
+                      textEditingController: _emailController,
+                      prefixIconData: Icons.mail_outlined,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+
+                  // TextFieldInput(
+                  //   hintText: 'Enter your password',
+                  //   textInputType: TextInputType.text,
+                  //   textEditingController: _passwordController,
+                  //   isPass: true,
+                  // ),
+
+                  SlideTransition(
+                    position: animation,
+                    child: TextFieldWidget(
+                      hintText: 'Password',
+                      textInputType: TextInputType.text,
+                      textEditingController: _passwordController,
+                      isPass: model.isVisible ? false : true,
+                      prefixIconData: Icons.lock_outlined,
+                      suffixIconData: model.isVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
                   ),
 
                   const SizedBox(
                     height: 24,
                   ),
-                  TextFieldInput(
-                    hintText: 'Enter your bio',
-                    textInputType: TextInputType.text,
-                    textEditingController: _bioController,
+
+                  SlideTransition(
+                    position: animation,
+                    child: TextFieldWidget(
+                      hintText: 'Confirm Password',
+                      textInputType: TextInputType.text,
+                      textEditingController: _confirmPasswordController,
+                      isPass: model.isVisible ? false : true,
+                      prefixIconData: Icons.lock_outlined,
+                      suffixIconData: model.isVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
                   ),
+
                   const SizedBox(
                     height: 24,
                   ),
+
+                  // TextFieldInput(
+                  //   hintText: 'Enter your bio',
+                  //   textInputType: TextInputType.text,
+                  //   textEditingController: _bioController,
+                  // ),
+                  //
+                  // const SizedBox(
+                  //   height: 24,
+                  // ),
 
                   //Login button
                   Container(
@@ -166,6 +298,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       borderRadius: BorderRadius.circular(25),
                       onTap: () {
                         // _showSnackBar("Signup... Will be implemented soon!");
+                        FocusScope.of(context).unfocus();
                         log('Sign Up clicked');
                         bool error = false;
                         String errorMsg = "Oops! Something went wrong.";
@@ -179,8 +312,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         } else if (_passwordController.text.trim().isEmpty) {
                           errorMsg = "Password must not be empty";
                           error = true;
+                        } else if (_confirmPasswordController.text.trim().isEmpty || (_confirmPasswordController.text.trim() != _passwordController.text.trim())) {
+                          errorMsg = "Passwords not matching";
+                          error = true;
+                        // } else if (_confirmPasswordController.text.trim() != _passwordController.text.trim()) {
+                        //   errorMsg = "Passwords not matching";
+                        //   error = true;
                         } else if (_bioController.text.trim().isEmpty) {
-                          errorMsg = "Bio must not be empty";
+                          errorMsg = "Please enter your full name";
                           error = true;
                         } else if (_image == null) {
                           errorMsg = "Profile picture must be set";
@@ -189,11 +328,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
                         log('Error: $error');
                         log('ErrorMsg: $errorMsg');
-                        if(!error){
+                        if (!error) {
                           log('Checking email validity');
                           bool emailValid =
-                          RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                              .hasMatch(_emailController.text.trim());
+                              RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                  .hasMatch(_emailController.text.trim());
                           if (emailValid) {
                             FocusScope.of(context).unfocus();
 
@@ -213,10 +352,10 @@ class _SignupScreenState extends State<SignupScreen> {
                             //       }
                             //     });
                           } else {
-                            showSnackBar(msg:"Please enter a valid email address", context: context, duration: 1200);
+                            showSnackBar(msg: "Please enter a valid email address", context: context, duration: 2000);
                           }
-                        }else{
-                          showSnackBar(msg:errorMsg, context: context, duration: 1200);
+                        } else {
+                          showSnackBar(msg: errorMsg, context: context, duration: 2000);
                         }
 
                         // if (_emailController.text.trim().isNotEmpty) {
@@ -306,7 +445,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       GestureDetector(
                           onTap: () {
-                            showSnackBar(msg:"Login.. Will be implemented soon!", context: context);
+                            // showSnackBar(msg:"Login.. Will be implemented soon!", context: context);
+                            navigateToLogin();
                           },
                           child: Container(
                             child: const Text(
@@ -333,7 +473,6 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void signUpUser() async {
-
     log('signUpUser():');
     // set loading to true
     // setState(() {
@@ -363,7 +502,7 @@ class _SignupScreenState extends State<SignupScreen> {
       // navigate to the home screen
       try {
         Navigator.pop(dialogContext);
-        showSnackBar(msg:res, context: context, duration: 1500);
+        showSnackBar(msg: res, context: context, duration: 1500);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
         Navigator.pop(dialogContext);
@@ -371,14 +510,12 @@ class _SignupScreenState extends State<SignupScreen> {
         // executed for errors of all types other than Exception
         Navigator.pop(dialogContext);
       }
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(
-      //     builder: (context) => const ResponsiveLayout(
-      //       mobileScreenLayout: MobileScreenLayout(),
-      //       webScreenLayout: WebScreenLayout(),
-      //     ),
-      //   ),
-      // );
+
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreenLayout(title: "Home screen"),
+          ),
+          (route) => false);
     } else {
       // setState(() {
       //   _isLoading = false;
@@ -387,7 +524,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       try {
         Navigator.pop(dialogContext);
-        showSnackBar(msg:res, context: context, duration: 2500);
+        showSnackBar(msg: res, context: context, duration: 2500);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
         Navigator.pop(dialogContext);
@@ -396,5 +533,13 @@ class _SignupScreenState extends State<SignupScreen> {
         Navigator.pop(dialogContext);
       }
     }
+  }
+
+  void navigateToLogin() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
+      ),
+    );
   }
 }

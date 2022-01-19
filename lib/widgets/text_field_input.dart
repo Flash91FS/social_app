@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 class TextFieldInput extends StatelessWidget {
   final TextEditingController textEditingController;
   final bool isPass;
+  final int? maxLines;
   final String hintText;
   final TextInputType textInputType;
 
   const TextFieldInput(
       {Key? key,
       required this.textEditingController,
-      this.isPass = false,
+        this.isPass = false,
+        this.maxLines = 1,
       required this.hintText,
       required this.textInputType})
       : super(key: key);
@@ -29,6 +31,7 @@ class TextFieldInput extends StatelessWidget {
       ),
       keyboardType: textInputType,
       obscureText: isPass,
+      maxLines: maxLines,
     );
   }
 }

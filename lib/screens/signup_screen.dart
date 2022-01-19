@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
 import 'package:social_app/screens/home_screen_layout.dart';
+import 'package:social_app/screens/mobile_screen_layout.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:social_app/utils/utils.dart';
 import 'package:social_app/widgets/loading_dialog.dart';
@@ -110,15 +111,15 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
 
     final model = Provider.of<LoginProvider>(context);
-
+    // SingleChildScrollView
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      // resizeToAvoidBottomInset: false,
       // appBar: AppBar(
       //   // Here we take the value from the MyHomePage object that was created by
       //   // the App.build method, and use it to set our appbar title.
       //   title: Text("Signup Screen"),
       // ),
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           // color: Colors.blue,
@@ -146,13 +147,13 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                 // horizontal).
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Flexible(
-                    child: Container(),
-                    flex: 1,
-                  ),
+                  // Flexible(
+                  //   child: Container(),
+                  //   flex: 1,
+                  // ),
                   // SvgPicture.asset('assets/ic_instagram.svg', color: primaryColor, height: 64,),
                   const SizedBox(
-                    height: 18,
+                    height: 54,
                   ),
                   const Text(
                     'Signup',
@@ -176,7 +177,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                             )
                           : const CircleAvatar(
                               radius: 64,
-                              backgroundImage: NetworkImage('https://i.stack.imgur.com/l60Hf.png'),
+                              backgroundImage: AssetImage('assets/images/default_profile_pic.png'),
+                              // backgroundImage: NetworkImage('https://i.stack.imgur.com/l60Hf.png'),
                               backgroundColor: Colors.white,
                             ),
                       Positioned(
@@ -197,7 +199,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                     position: animation,
                     child: TextFieldWidget(
                       hintText: 'Full Name',
-                      textInputType: TextInputType.text,
+                      textInputType: TextInputType.name,
                       textEditingController: _bioController,
                       prefixIconData: Icons.account_circle_outlined,
                     ),
@@ -402,19 +404,19 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                         // color: Colors.blue,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
-                          // color: Colors.purple,
-                          gradient: const LinearGradient(
-                              colors: [
-                                Colors.blueAccent,
-                                Colors.deepPurple,
-                              ],
-                              stops: [
-                                0.0,
-                                100.0
-                              ],
-                              begin: FractionalOffset.centerLeft,
-                              end: FractionalOffset.centerRight,
-                              tileMode: TileMode.repeated),
+                          color: Colors.blue[800],
+                          // gradient: const LinearGradient(
+                          //     colors: [
+                          //       Colors.blueAccent,
+                          //       Colors.deepPurple,
+                          //     ],
+                          //     stops: [
+                          //       0.0,
+                          //       100.0
+                          //     ],
+                          //     begin: FractionalOffset.centerLeft,
+                          //     end: FractionalOffset.centerRight,
+                          //     tileMode: TileMode.repeated),
                         ),
                         child: const Center(
                           child: Text(
@@ -431,10 +433,10 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                     ),
                   ),
 
-                  Flexible(
-                    child: Container(),
-                    flex: 1,
-                  ),
+                  // Flexible(
+                  //   child: Container(),
+                  //   flex: 1,
+                  // ),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -513,7 +515,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
 
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const HomeScreenLayout(title: "Home screen"),
+            builder: (context) => const MobileScreenLayout(title: "Home screen"),
           ),
           (route) => false);
     } else {

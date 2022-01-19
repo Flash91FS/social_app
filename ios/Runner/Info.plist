@@ -47,5 +47,9 @@
 	<string>Mic Usage</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Privacy Camera Usage</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location Usage</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location Usage</string>
 </dict>
 </plist>

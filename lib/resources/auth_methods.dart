@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:social_app/models/user.dart' as model;
 import 'package:social_app/resources/storage_methods.dart';
+import 'package:social_app/utils/utils.dart';
 
 class AuthMethods {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -14,7 +15,7 @@ class AuthMethods {
     User currentUser = _firebaseAuth.currentUser!;
 
     DocumentSnapshot documentSnapshot = await _firestore.collection('users').doc(currentUser.uid).get();
-
+log("current user: UID == ${currentUser.uid}");
     return model.User.fromSnap(documentSnapshot);
   }
 
@@ -28,7 +29,7 @@ class AuthMethods {
   }) async {
     String res = "Some error occurred";
     try {
-      if (email.isNotEmpty || pass.isNotEmpty || username.isNotEmpty || bio.isNotEmpty || imgFile != null) {
+      if (email.isNotEmpty && pass.isNotEmpty && username.isNotEmpty && bio.isNotEmpty && imgFile != null) {
         // registering user in auth with email and password
         UserCredential cred = await _firebaseAuth.createUserWithEmailAndPassword(
           email: email,
@@ -65,13 +66,17 @@ class AuthMethods {
       }
     } catch (e) {
       String ress = e.toString();
-      print("catch error: $ress");
+      log("catch error: $ress");
       if (ress.contains("email address is already in use") || ress.contains("email-already-in-use")) {
         res = "The email address is already in use by another account";
       } else if (ress.contains("Password should be at least 6 characters") || ress.contains("weak-password")) {
         res = "Password should be at least 6 characters";
       } else if (ress.contains("invalid-email")) {
         res = "Please enter a valid email address";
+      } else if (ress.contains("network-request-failed") || ress.contains("network error")) {
+        res = "Network error. Please make sure you have a valid internet connection";
+      } else if (ress.contains("too-many-requests")) {
+        res = "Too many requests from this device due to unusual activity. Try again later";
       }
     }
     return res;
@@ -96,7 +101,7 @@ class AuthMethods {
       }
     } catch (err) {
       String ress = err.toString();
-      print("catch error: $ress");
+      log("catch error: $ress");
       if (ress.contains("password is invalid") || ress.contains("wrong-password")) {
         res = "Incorrect Password";
       } else if (ress.contains("no user record corresponding to this identifier") || ress.contains("user-not-found")) {
@@ -105,6 +110,8 @@ class AuthMethods {
         res = "Please enter a valid email address";
       } else if (ress.contains("too-many-requests")) {
         res = "Too many requests from this device due to unusual activity. Try again later";
+      } else if (ress.contains("network-request-failed") || ress.contains("network error")) {
+        res = "Network error. Please make sure you have a valid internet connection";
       }
     }
     return res;

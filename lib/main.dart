@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:social_app/providers/location_provider.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/screens/home_screen_layout.dart';
 import 'package:social_app/screens/login_screen.dart';
+import 'package:social_app/screens/mobile_screen_layout.dart';
 import 'package:social_app/screens/signup_screen.dart';
 import 'package:social_app/utils/colors.dart';
 
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider(),),
         ChangeNotifierProvider(create: (_) => LoginProvider(),),
+        ChangeNotifierProvider(create: (_) => LocationProvider(),),
       ],
       child: MaterialApp(
         title: 'Social App',
@@ -50,7 +53,7 @@ class MyApp extends StatelessWidget {
                 // Checking if the snapshot has any data or not
                 if (snapshot.hasData) {
                   // if snapshot has data which means user is logged in then we check the width of screen and accordingly display the screen layout
-                  return const HomeScreenLayout(title: 'Home Page',);
+                  return const MobileScreenLayout(title: 'Home Page',);
                 } else if (snapshot.hasError) {
                   return Center(
                     child: Text('${snapshot.error}'),
@@ -65,6 +68,7 @@ class MyApp extends StatelessWidget {
                 );
               }
 
+              // return const TestScreen(title: "Test");
               return const LoginScreen();
             },
           ),

@@ -32,33 +32,25 @@ class HomeScreenLayout extends StatefulWidget {
 }
 
 class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerProviderStateMixin {
-  // int _counter = 0;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+
+  // final TextEditingController _emailController = TextEditingController();
+  // final TextEditingController _passwordController = TextEditingController();
   late BuildContext dialogContext;
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-  }
-
 
 
   @override
   void initState() {
     super.initState();
-    getData();
   }
 
-
-  void getData() async {
-    UserProvider _userProvider = Provider.of(context, listen: false);
-    await _userProvider.refreshUser();
+  @override
+  void dispose() {
+    super.dispose();
+    // _emailController.dispose();
+    // _passwordController.dispose();
   }
+
 
   void signOutUser() async {
     await AuthMethods().signOut();
@@ -67,7 +59,7 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
         MaterialPageRoute(
           builder: (context) => const LoginScreen(),
         ),
-            (route) => false);
+        (route) => false);
   }
 
   @override
@@ -79,7 +71,7 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
       // appBar: AppBar(
       //   // Here we take the value from the MyHomePage object that was created by
       //   // the App.build method, and use it to set our appbar title.
-      //   title: Text("Login Screen"),
+      //   title: Text("Home Screen"),
       // ),
       body: SafeArea(
         child: Container(
@@ -111,13 +103,16 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                 const SizedBox(
                   height: 24,
                 ),
-                Text(
-                  'Welcome back',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    // fontFamily: 'Roboto-Regular',
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Test screen to implement n test UI ... and test Logout',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      // fontFamily: 'Roboto-Regular',
+                    ),
                   ),
                 ),
 
@@ -129,10 +124,10 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                   // color: Colors.red,
                   decoration: const BoxDecoration(
                     // borderRadius: BorderRadius.circular(25),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
-                    ),
+                    // borderRadius: BorderRadius.only(
+                    //   topLeft: Radius.circular(25),
+                    //   topRight: Radius.circular(25),
+                    // ),
                     color: Colors.white,
                   ),
                   child: Stack(
@@ -159,7 +154,7 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                                   padding: EdgeInsets.symmetric(horizontal: 2.0),
                                 ),
                                 Text(
-                                  'Login',
+                                  'Hello',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 28,
@@ -172,25 +167,25 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                             const SizedBox(
                               height: 24,
                             ),
-                            TextFieldWidget(
-                              hintText: 'Email',
-                              textInputType: TextInputType.emailAddress,
-                              textEditingController: _emailController,
-                              prefixIconData: Icons.mail_outlined,
-                              darkBackground: false,
-                            ),
-                            const SizedBox(
-                              height: 24,
-                            ),
-                            TextFieldWidget(
-                              hintText: 'Password',
-                              textInputType: TextInputType.text,
-                              textEditingController: _passwordController,
-                              isPass: model.isVisible ? false : true,
-                              prefixIconData: Icons.lock_outlined,
-                              suffixIconData: model.isVisible ? Icons.visibility : Icons.visibility_off,
-                              darkBackground: false,
-                            ),
+                            // TextFieldWidget(
+                            //   hintText: 'Email',
+                            //   textInputType: TextInputType.emailAddress,
+                            //   textEditingController: _emailController,
+                            //   prefixIconData: Icons.mail_outlined,
+                            //   darkBackground: false,
+                            // ),
+                            // const SizedBox(
+                            //   height: 24,
+                            // ),
+                            // TextFieldWidget(
+                            //   hintText: 'Password',
+                            //   textInputType: TextInputType.text,
+                            //   textEditingController: _passwordController,
+                            //   isPass: model.isVisible ? false : true,
+                            //   prefixIconData: Icons.lock_outlined,
+                            //   suffixIconData: model.isVisible ? Icons.visibility : Icons.visibility_off,
+                            //   darkBackground: false,
+                            // ),
                             const SizedBox(
                               height: 24,
                             ),
@@ -204,84 +199,6 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                         ),
                       ),
 
-
-                      Positioned(
-                        // bottom: -27,
-                        bottom: -1,
-                        right: 0,
-                        left: 0,
-                        child: Ink(
-                          width: 200,
-                          height: 27,
-                          decoration: const BoxDecoration(
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-
-                      // ----------- Right Corner -----------
-                      Positioned(
-                        // bottom: -27,
-                        bottom: 25,
-                        right: 0,
-                        left: null,
-                        width: 25,
-                        height: 25,
-                        child: Container(
-                          width: 25,
-                          height: 25,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Positioned(
-                        // bottom: -27,
-                        bottom: 26,
-                        right: 0,
-                        left: null,
-                        width: 50,
-                        height: 50,
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-
-                      // ----------- Left Corner -----------
-                      Positioned(
-                        // bottom: -27,
-                        bottom: 25,
-                        right: null,
-                        left: 0,
-                        width: 25,
-                        height: 25,
-                        child: Container(
-                          width: 25,
-                          height: 25,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Positioned(
-                        // bottom: -27,
-                        bottom: 26,
-                        right: null,
-                        left: 0,
-                        width: 50,
-                        height: 50,
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-
-
                       // ----------- Login Button -----------
                       Positioned(
                         // bottom: -27,
@@ -290,32 +207,15 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                         left: 1,
 
                         child: Center(
-                          child: Container(
+                          child:
+                          Container(
                             width: 200,
                             height: 54,
-                            // color: Colors.blue,
-                            // decoration: BoxDecoration(
-                            //   borderRadius: BorderRadius.circular(25),
-                            //   color: Colors.purple,
-                            //   // gradient: const LinearGradient(
-                            //   //     colors: [
-                            //   //       Colors.blue,
-                            //   //       Colors.deepPurple,
-                            //   //     ],
-                            //   //     stops: [
-                            //   //       0.0,
-                            //   //       100.0
-                            //   //     ],
-                            //   //     begin: FractionalOffset.centerLeft,
-                            //   //     end: FractionalOffset.centerRight,
-                            //   //     tileMode: TileMode.repeated),
-                            // ),
-
                             child: InkWell(
                               borderRadius: BorderRadius.circular(25),
                               onTap: () {
                                 // showSnackBar(
-                                    // msg: "Login... Will be implemented soon!", context: context, duration: 2000);
+                                // msg: "Login... Will be implemented soon!", context: context, duration: 2000);
                                 signOutUser();
                               },
                               child: Ink(
@@ -324,22 +224,10 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(25),
                                   color: Colors.blue,
-                                  //   gradient: const LinearGradient(
-                                  //       colors: [
-                                  //         Colors.blue,
-                                  //         Colors.deepPurple,
-                                  //       ],
-                                  //       stops: [
-                                  //         0.0,
-                                  //         100.0
-                                  //       ],
-                                  //       begin: FractionalOffset.centerLeft,
-                                  //       end: FractionalOffset.centerRight,
-                                  //       tileMode: TileMode.repeated),
                                 ),
                                 child: const Center(
                                   child: Text(
-                                    "Login",
+                                    "Logout",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.white,
@@ -357,7 +245,6 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                   ),
                 ),
 
-
                 const SizedBox(
                   height: 4,
                 ),
@@ -366,39 +253,11 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
                   child: Container(),
                   flex: 1,
                 ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      child: const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
-                          color: Colors.grey,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                    ),
-                    GestureDetector(
-                        onTap: () {
-                          showSnackBar(msg: "Sign Up.. Will be implemented soon!", context: context, duration: 2000);
-                        },
-                        child: Container(
-                          child: const Text(
-                            "Sign up.",
-                            style: TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 18),
-                        )),
-                  ],
-                ),
               ],
             ),
           ),
         ),
       ),
     );
-
   }
-
 }

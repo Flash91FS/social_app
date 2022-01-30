@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 pickImage(ImageSource source) async {
@@ -8,6 +9,11 @@ pickImage(ImageSource source) async {
     return await _file.readAsBytes();
   }
   log("No image selected");
+}
+
+Future<String> loadMapStyles() async {
+  String darkMapStyle = await rootBundle.loadString('assets/nightmode.json');
+  return darkMapStyle;
 }
 
 void showSnackBar({

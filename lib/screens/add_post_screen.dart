@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:location/location.dart';
+import 'package:social_app/providers/location_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/firestore_methods.dart';
 
@@ -100,34 +102,43 @@ class _AddPostScreenState extends State<AddPostScreen> {
       // start the loading
       try {
         // upload to storage and db
-        String res = await FireStoreMethods().uploadPost(
-          _spotTitleController.text,
-          _descriptionController.text,
-          _categoryController.text,
-          _file!,
-          uid,
-          username,
-          profImage,
-        );
-        log("Result (uploadPost) : $res");
-        if (res == "success") {
-          setState(() {
-            isLoading = false;
-          });
-          showSnackBar(
-            context: context, msg: 'Spot Added Successfully!', duration: 2500
-          );
-          clearImage();
+        final LocationProvider locProvider = Provider.of<LocationProvider>(context, listen: false);
+        LocationData? userLoc = locProvider.getLoc;
+        if (userLoc==null) {
+          throw Exception("Could not get user location please go back and try again");
         } else {
-          showSnackBar(context: context, msg: res);
+          String res = await FireStoreMethods().uploadPost(
+            _spotTitleController.text,
+            _descriptionController.text,
+            _categoryController.text,
+            _file!,
+            uid,
+            username,
+            profImage,
+            userLoc.latitude!.toString(),
+            userLoc.longitude!.toString(),
+          );
+          log("Result (uploadPost) : $res");
+          if (res == "success") {
+            setState(() {
+              isLoading = false;
+            });
+            showSnackBar(
+                context: context, msg: 'Spot Added Successfully!', duration: 2500
+            );
+            clearImage();
+          } else {
+            showSnackBar(context: context, msg: res);
+          }
         }
+
       } catch (err) {
         setState(() {
           isLoading = false;
         });
         log("Exception : ${err.toString()}");
         showSnackBar(
-          context: context, msg: err.toString(),
+          context: context, msg: err.toString(), duration: 2000
         );
       }
     } else {
@@ -292,6 +303,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         color: Colors.grey[900],
                       ),
                       child: const Center(
+                        // child: ImageIcon(
+                        //   const AssetImage('assets/images/send_48.png'),
+                        //   size: 32,
+                        //   color: Colors.white,//(darkMode ? iconColorLight : iconColorDark),//Colors.white,
+                        // ),
                         child: Icon(
                           Icons.add,
                         ),
@@ -337,7 +353,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     // color: Colors.blue,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
-                      color: Colors.blue[800],
+                      color: appBlueColor,
+                      // color: Colors.blue[800],
                     ),
                     child: const Center(
                       child: Text(

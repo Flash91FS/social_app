@@ -11,6 +11,8 @@ class Post {
   final DateTime datePublished;
   final String postUrl;
   final String profImage;
+  final String lat;
+  final String lng;
 
   const Post(
       {
@@ -24,6 +26,8 @@ class Post {
         required this.datePublished,
         required this.postUrl,
         required this.profImage,
+        required this.lat,
+        required this.lng,
       });
 
   static Post fromSnap(DocumentSnapshot snap) {
@@ -39,7 +43,9 @@ class Post {
         datePublished: snapshot["datePublished"],
         username: snapshot["username"],
         postUrl: snapshot['postUrl'],
-        profImage: snapshot['profImage']
+        profImage: snapshot['profImage'],
+        lat: snapshot['lat'],
+        lng: snapshot['lng']
     );
   }
 
@@ -53,6 +59,8 @@ class Post {
     "postId": postId,
     "datePublished": datePublished,
     'postUrl': postUrl,
-    'profImage': profImage
+    'profImage': profImage,
+    'lat': lat,
+    'lng': lng
   };
 }

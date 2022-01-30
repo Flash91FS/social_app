@@ -22,6 +22,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Privacy Camera Usage</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Location Usage</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location Usage</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mic Usage</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo Library Usage</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -29,8 +39,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
@@ -41,15 +49,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo Library Usage</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Mic Usage</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Privacy Camera Usage</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Location Usage</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Location Usage</string>
 </dict>
 </plist>

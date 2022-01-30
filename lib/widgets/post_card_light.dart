@@ -15,21 +15,21 @@ import 'package:social_app/widgets/like_animation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-const String TAG = "FS - PostCard - ";
+const String TAG = "FS - PostCardLight - ";
 
-class PostCard extends StatefulWidget {
+class PostCardLight extends StatefulWidget {
   final snap;
 
-  const PostCard({
+  const PostCardLight({
     Key? key,
     required this.snap,
   }) : super(key: key);
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostCardLight> createState() => _PostCardLightState();
 }
 
-class _PostCardState extends State<PostCard> {
+class _PostCardLightState extends State<PostCardLight> {
   int commentLen = 0;
   double _cardRadius = 14.0;
   bool isLikeAnimating = false;
@@ -135,22 +135,29 @@ class _PostCardState extends State<PostCard> {
           // boundary needed for web
           decoration: BoxDecoration(
             border: Border.all(
-              color: mobileBackgroundColor,
+              color: mobileBackgroundColorLight,
             ),
-            color: mobileBackgroundColor,
+            color: mobileBackgroundColorLight,
           ),
           // padding: const EdgeInsets.symmetric(
           //   vertical: 10,
           // ),
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
           child: Container(
-            // color: Colors.grey[850],
+            // color: cardColorDark,
             decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  offset: Offset(0.0, 1.0), //(x,y)
+                  blurRadius: 6.0,
+                ),
+              ],
               // border: Border.all(
-              //   color: mobileBackgroundColor,
+              //   color: mobileBackgroundColorLight,
               // ),
               borderRadius: BorderRadius.circular(_cardRadius),
-              color: Colors.grey[850], // mobileBackgroundColor,
+              color: cardColorLight, // cardColorDark, // mobileBackgroundColorLight,
             ),
             child: Column(
               children: [
@@ -190,14 +197,11 @@ class _PostCardState extends State<PostCard> {
                             placeholder: "assets/images/placeholder_img.png", image: "${widget.snap['postUrl']}"),
 
                         decoration: BoxDecoration(
-                          // border: Border.all(
-                          //   color: mobileBackgroundColor,
-                          // ),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(_cardRadius),
                             topRight: Radius.circular(_cardRadius),
                           ),
-                          color: Colors.grey[900], // mobileBackgroundColor,
+                          color: Colors.grey[900], // mobileBackgroundColorLight,
                         ),
                       ),
                       AnimatedOpacity(
@@ -346,22 +350,29 @@ class _PostCardState extends State<PostCard> {
                   // padding: const EdgeInsets.only(
                   //   top: 8,
                   // ),
-                  child: RichText(
-                    text: TextSpan(
-                      style: const TextStyle(color: primaryColor),
-                      children: [
-                        // TextSpan(
-                        //   text: widget.snap['username'].toString(),
-                        //   style: const TextStyle(
-                        //     fontWeight: FontWeight.bold,
-                        //   ),
-                        // ),
-                        TextSpan(
-                          text: ' ${widget.snap['description']}',
-                        ),
-                      ],
+                  child: Text(
+                    '${widget.snap['description']}',
+                    style: const TextStyle(
+                      // fontSize: 12,
+                      // color: secondaryColor,
                     ),
                   ),
+                  // child: RichText(
+                  //   text: TextSpan(
+                  //     style: const TextStyle(color: Colors.black),
+                  //     children: [
+                  //       // TextSpan(
+                  //       //   text: widget.snap['username'].toString(),
+                  //       //   style: const TextStyle(
+                  //       //     fontWeight: FontWeight.bold,
+                  //       //   ),
+                  //       // ),
+                  //       TextSpan(
+                  //         text: ' ${widget.snap['description']}',
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ),
                 Container(
                   height: 30,
@@ -463,37 +474,6 @@ class _PostCardState extends State<PostCard> {
                       //       child: IconButton(
                       //           icon: const Icon(Icons.bookmark_border), onPressed: () {}),
                       //     ))
-
-                      // Flexible(
-                      //   child: Container(),
-                      //   flex: 1,
-                      // ),
-                      // Padding(
-                      //   padding: const EdgeInsets.fromLTRB(12,0,12,0),
-                      //   child: GestureDetector(
-                      //     onTap: () {
-                      //       log("$TAG share pressed");
-                      //
-                      //     },
-                      //     child: ImageIcon(
-                      //       const AssetImage('assets/images/send_48.png'),
-                      //       size: 26,
-                      //       color: (darkMode ? iconColorLight : iconColorDark) ,//Colors.white,
-                      //     ),
-                      //   ),
-                      // ),
-
-
-                      // IconButton(
-                      //   icon: const Icon(
-                      //     Icons.share,
-                      //   ),
-                      //   padding: const EdgeInsets.all(0.0),
-                      //   onPressed: () {
-                      //     log("$TAG share pressed");
-                      //
-                      //   },
-                      // ),
                     ],
                   ),
                 ),
@@ -593,18 +573,18 @@ class _PostCardState extends State<PostCard> {
 // import 'package:intl/intl.dart';
 // // import 'package:provider/provider.dart';
 //
-// class PostCard extends StatefulWidget {
+// class PostCardLight extends StatefulWidget {
 //   final snap;
-//   const PostCard({
+//   const PostCardLight({
 //     Key? key,
 //     required this.snap,
 //   }) : super(key: key);
 //
 //   @override
-//   State<PostCard> createState() => _PostCardState();
+//   State<PostCardLight> createState() => _PostCardLightState();
 // }
 //
-// class _PostCardState extends State<PostCard> {
+// class _PostCardLightState extends State<PostCardLight> {
 //   int commentLen = 0;
 //   bool isLikeAnimating = false;
 //
@@ -648,9 +628,9 @@ class _PostCardState extends State<PostCard> {
 //       // boundary needed for web
 //       decoration: BoxDecoration(
 //         border: Border.all(
-//           color: mobileBackgroundColor,
+//           color: mobileBackgroundColorLight,
 //         ),
-//         color: mobileBackgroundColor,
+//         color: mobileBackgroundColorLight,
 //       ),
 //       padding: const EdgeInsets.symmetric(
 //         vertical: 10,

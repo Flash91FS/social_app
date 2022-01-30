@@ -3,17 +3,26 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:social_app/providers/location_provider.dart';
+import 'package:social_app/providers/home_page_provider.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/screens/home_screen_layout.dart';
 import 'package:social_app/screens/login_screen.dart';
 import 'package:social_app/screens/mobile_screen_layout.dart';
+import 'package:social_app/screens/onboarding_screen.dart';
+import 'package:social_app/screens/profile_pic_screen.dart';
 import 'package:social_app/screens/signup_screen.dart';
 import 'package:social_app/utils/colors.dart';
+import 'package:social_app/utils/global_variable.dart';
+import 'package:social_app/utils/utils.dart';
+
+const String TAG = "FS - main - ";
+String? darkMapStyle;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  darkMapStyle = await loadMapStyles();
   runApp(const MyApp());
 }
 
@@ -27,10 +36,11 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider(),),
         ChangeNotifierProvider(create: (_) => LoginProvider(),),
+        ChangeNotifierProvider(create: (_) => HomePageProvider(),),
         ChangeNotifierProvider(create: (_) => LocationProvider(),),
       ],
       child: MaterialApp(
-        title: 'Social App',
+        title: 'Spot App',
         // theme: ThemeData(
         //   // This is the theme of your application.
         //   //
@@ -44,7 +54,11 @@ class MyApp extends StatelessWidget {
         //   primarySwatch: Colors.blue,
         //   brightness: Brightness.dark
         // ),
-        theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
+        theme: darkMode ? ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: mobileBackgroundColor,
+        ) : ThemeData.light().copyWith(
+          scaffoldBackgroundColor: mobileBackgroundColor,
+        ),
         // home: SignupScreen(),// const MyHomePage(title: 'Social App Home Page'),
           home: StreamBuilder(
             stream: FirebaseAuth.instance.authStateChanges(),
@@ -54,6 +68,8 @@ class MyApp extends StatelessWidget {
                 if (snapshot.hasData) {
                   // if snapshot has data which means user is logged in then we check the width of screen and accordingly display the screen layout
                   return const MobileScreenLayout(title: 'Home Page',);
+                  // return const ProfilePicScreen(showBackButton: false, showSkipButton: false,);
+                  // return const OnboardingScreen();
                 } else if (snapshot.hasError) {
                   return Center(
                     child: Text('${snapshot.error}'),
@@ -69,6 +85,7 @@ class MyApp extends StatelessWidget {
               }
 
               // return const TestScreen(title: "Test");
+              // return const ProfilePicScreen(showBackButton: false, showSkipButton: false,);
               return const LoginScreen();
             },
           ),
@@ -76,3 +93,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+// spotkeystore
+//pass: 123456
+//alias: spot
+//pass: 123456

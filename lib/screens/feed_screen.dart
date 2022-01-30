@@ -2,10 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+import 'package:social_app/apis/api_helper.dart';
+import 'package:social_app/models/feed.dart';
+import 'package:social_app/models/httpresponse.dart';
 import 'package:social_app/providers/location_provider.dart';
+import 'package:social_app/providers/home_page_provider.dart';
 import 'package:social_app/utils/colors.dart';
+import 'package:social_app/utils/global_variable.dart';
 import 'package:social_app/utils/utils.dart';
+import 'package:social_app/widgets/feed_card.dart';
 import 'package:social_app/widgets/post_card.dart';
+import 'package:social_app/widgets/post_card_2.dart';
+import 'package:social_app/widgets/post_card_light.dart';
 
 import 'add_post_screen.dart';
 
@@ -17,6 +25,7 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  ScrollController _scrollController = ScrollController();
 
   void openAddSpotScreen() {
     final LocationProvider locProvider = Provider.of<LocationProvider>(context, listen: false);
@@ -62,13 +71,40 @@ class _FeedScreenState extends State<FeedScreen> {
     }
   }
 
+  void getFeedPosts() async {
+    log("getFeedPosts() called ");
+    //todo uncomment to connect to server
+    // final HomePageProvider homeProvider = Provider.of<HomePageProvider>(context, listen: false);
+    // homeProvider.setIsHomePageProcessing(true, notify: false);
+    // HTTPResponse<List<Feed>> response =  await APIHelper.getPostsFeed();
+    // if(response.isSuccessful){
+    //   homeProvider.setFeedsList(response.data!);
+    // }else{
+    //   log("SHOW ERROR ");
+    // }
+    // homeProvider.setIsHomePageProcessing(false, notify: false);
+    // // String respCodeStr = await APIHelper.getPostsFeed();
+    // // log("getFeedPosts(): respCodeStr = $respCodeStr");
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     // _enableLocService();
+    _scrollController.addListener(() {
+          if (_scrollController.hasClients) {
+            if (_scrollController.offset ==
+                _scrollController.position.maxScrollExtent) {
+              // _getPosts();
+              log("initState(): maxScrollExtent == _getPosts(); with Refresh = TRUE");
+            }
+          }
+        });
     try {
       getData();
+      getFeedPosts();
+      log("initState(): getFeedPosts() called ---");
     } catch (e) {
       log("initState(): Error == ${e.toString()}");
     }
@@ -77,14 +113,18 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    log("build(): called ---");
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: mobileBackgroundColor,
+      backgroundColor: darkMode ? mobileBackgroundColor : mobileBackgroundColorLight,//
       appBar: AppBar(
-        backgroundColor: mobileBackgroundColor,
+        backgroundColor: darkMode ? mobileBackgroundColor : mobileBackgroundColorLight,//
         centerTitle: true,
-        title: const Text("Home"),
+        title: Text("Feed", style: TextStyle(
+           color: darkMode ? Colors.white : Colors.black,
+          ),
+        ),
         // title: SvgPicture.asset(
         //   'assets/ic_instagram.svg',
         //   color: primaryColor,
@@ -92,9 +132,9 @@ class _FeedScreenState extends State<FeedScreen> {
         // ),
         actions: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.camera_alt_outlined,
-              color: primaryColor,
+              color: darkMode ? iconColorLight : iconColorDark,
             ),
             onPressed: () {
               openAddSpotScreen();
@@ -106,6 +146,7 @@ class _FeedScreenState extends State<FeedScreen> {
       // Center(
       //   child: CircularProgressIndicator(),
       // ),
+      //--------------------------------------------------------------
       body: StreamBuilder(
         stream: FirebaseFirestore.instance.collection('posts').snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
@@ -115,19 +156,54 @@ class _FeedScreenState extends State<FeedScreen> {
             );
           }
           return ListView.builder(
+            physics: const BouncingScrollPhysics(),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (ctx, index) => Container(
-              margin: EdgeInsets.symmetric(
+              margin: const EdgeInsets.symmetric(
                 horizontal: 0,
                 vertical: 0,
               ),
-              child: PostCard(
+              child: darkMode ? PostCard2(
+                snap: snapshot.data!.docs[index].data(),
+              ) : PostCardLight(
                 snap: snapshot.data!.docs[index].data(),
               ),
             ),
           );
         },
       ),
+      //--------------------------------------------------------------
+      // body: Consumer<HomePageProvider>(
+      //   builder: (_, provider, __) => provider.isHomePageProcessing
+      //       ? const Center(
+      //           child: CircularProgressIndicator(),
+      //         )
+      //       : provider.feedsListLength > 0
+      //           ? ListView.builder(
+      //               physics: const BouncingScrollPhysics(),
+      //               controller: _scrollController,
+      //               itemBuilder: (_, index) {
+      //                 Feed feed = provider.getFeedByIndex(index);
+      //
+      //                 return FeedCard(
+      //                   feed: feed,
+      //                 );
+      //                 // return ListTile(
+      //                 //   title: Text(post.title!),
+      //                 //   subtitle: Text(
+      //                 //     post.description!,
+      //                 //     maxLines: 2,
+      //                 //     overflow: TextOverflow.ellipsis,
+      //                 //   ),
+      //                 // );
+      //               },
+      //               itemCount: provider.feedsListLength,
+      //             )
+      //           : const Center(
+      //               child: Text('Nothing to show here!'),
+      //             ),
+      // ),
+      //--------------------------------------------------------------
     );
   }
 }

@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_app/resources/auth_methods.dart';
+import 'package:social_app/screens/all_chats_screen.dart';
 import 'package:social_app/screens/login_screen.dart';
+import 'package:social_app/screens/message_screen.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:social_app/utils/utils.dart';
 
@@ -13,9 +15,18 @@ import 'package:social_app/utils/utils.dart';
 // import 'package:social_app/widgets/follow_button.dart';
 import 'package:social_app/utils/utils.dart';
 
+const String TAG = "FS - ProfileScreen - ";
+
 class ProfileScreen extends StatefulWidget {
   final String uid;
-  const ProfileScreen({Key? key, required this.uid}) : super(key: key);
+  final bool showBackButton;
+
+  const ProfileScreen({
+    Key? key,
+    required this.uid,
+    this.showBackButton = false,
+  }) : super(key: key);
+
   // const TestProfileScreen({
   //   Key? key,
   // }) : super(key: key);
@@ -36,25 +47,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    log("initState called");
+    log("$TAG initState called");
     getData();
   }
 
   @override
   void dispose() {
     super.dispose();
-    log("dispose called");
+    log("$TAG dispose called");
   }
 
-
   void signOutUser() async {
+    // openAllChatsScreen();
     await AuthMethods().signOut();
     showSnackBar(msg: "Sign Out Success!", context: context, duration: 500);
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const LoginScreen(),
         ),
-            (route) => false);
+        (route) => false);
   }
 
   Future<void> selectImage() async {
@@ -64,61 +75,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  void openMessageScreen() {
+    log("openMessageScreen");
+    String photoUrl = userData['photoUrl'] ?? "";
+    String name = "";
+
+    if (userData['fullName'] != null && userData['fullName'].toString().isNotEmpty) {
+      name = userData['fullName'];
+    }else{
+      name = userData['username'];
+    }
+
+    //todo uncomment to open up message screen
+    // Navigator.of(context).push(MaterialPageRoute(
+    //   builder: (context) => MessageScreen(
+    //     uid: widget.uid,
+    //     name: name,
+    //     photoUrl: photoUrl,
+    //   ),
+    // ));
+
+  }
+
+  void openAllChatsScreen() {
+    log("openAllChatsScreen");
+
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AllChatsScreen(
+      ),
+    ));
+
+  }
+
   getData() async {
-    log("getData called : UID =  ${widget.uid}");
+    log("$TAG getData called : UID =  ${widget.uid}");
     if (!mounted) {
-      log("Already unmounted i.e. Dispose called");
+      log("$TAG Already unmounted i.e. Dispose called");
       return;
     }
     setState(() {
       isLoading = true;
     });
     try {
-      var userSnap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.uid)
-          .get();
-      log("got userSnap");
+      var userSnap = await FirebaseFirestore.instance.collection('users').doc(widget.uid).get();
+      log("$TAG got userSnap");
 
       // get post lENGTH
       var postSnap = await FirebaseFirestore.instance
           .collection('posts')
-          .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .where('uid', isEqualTo: widget.uid)
           .get();
-      log("got postSnap");
+      log("$TAG got postSnap");
 
       postLen = postSnap.docs.length;
+      log("$TAG postLen = $postLen");
       userData = userSnap.data()!;
       followers = userSnap.data()!['followers'].length;
       following = userSnap.data()!['following'].length;
-      isFollowing = userSnap
-          .data()!['followers']
-          .contains(FirebaseAuth.instance.currentUser!.uid);
+      isFollowing = userSnap.data()!['followers'].contains(FirebaseAuth.instance.currentUser!.uid);
       if (!mounted) {
-        log("Already unmounted i.e. Dispose called");
+        log("$TAG Already unmounted i.e. Dispose called");
         return;
       }
       setState(() {});
     } catch (e) {
-
-      log("Error: ${e.toString()}");
+      log("$TAG Error: ${e.toString()}");
       if (!mounted) {
-        log("Already unmounted i.e. Dispose called");
+        log("$TAG Already unmounted i.e. Dispose called");
         return;
       }
-      showSnackBar(msg:e.toString(), context: context, duration: 1500);
+      showSnackBar(msg: e.toString(), context: context, duration: 1500);
       // showSnackBar(
       //   context,
       //   e.toString(),
       // );
     }
     if (!mounted) {
-      log("Already unmounted i.e. Dispose called");
+      log("$TAG Already unmounted i.e. Dispose called");
       return;
     }
     setState(() {
       isLoading = false;
     });
+  }
+
+  Widget returnProfilePicWidgetIfAvailable() {
+    if (userData['photoUrl'] != null && userData['photoUrl'].toString().isNotEmpty) {
+      return CircleAvatar(
+        radius: 42,
+        backgroundColor: Colors.white,
+        child: CircleAvatar(
+          radius: 40,
+          // backgroundImage: AssetImage('assets/images/default_profile_pic.png'),
+          backgroundImage: NetworkImage("${userData['photoUrl']}"),
+          // backgroundColor: Colors.white,
+        ),
+      );
+    } else {
+      return const CircleAvatar(
+        radius: 42,
+        backgroundColor: Colors.white,
+        child: CircleAvatar(
+          radius: 40,
+          backgroundImage: AssetImage('assets/images/default_profile_pic.png'),
+        ),
+      );
+    }
   }
 
   @override
@@ -128,25 +190,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircularProgressIndicator(),
           )
         : Scaffold(
-            // appBar: AppBar(
-            //   backgroundColor: mobileBackgroundColor,
-            //   title: Text(
-            //     "Profile",
-            //     // userData['username'],
-            //   ),
-            //   centerTitle: true,
-            // ),
+            // extendBodyBehindAppBar: true,
+            appBar: widget.showBackButton ? AppBar(
+              title: const Text("Profile"),
+              centerTitle: true,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              // leading:  IconButton(
+              //   icon: const Icon(
+              //     Icons.arrow_back,
+              //     color: primaryColor,
+              //   ),
+              //   onPressed: () {
+              //   },
+              // ),
+              actions: [
+                // TextButton(
+                //   onPressed: (){},
+                //   child: const Text(
+                //     "Skip",
+                //     style: TextStyle(
+                //       fontSize: 16,
+                //       color: Colors.white,
+                //       // fontWeight: FontWeight.bold,
+                //     ),
+                //   ),
+                // ),
+              ],
+            ) : null,
             body: ListView(
               children: [
                 Column(
                   children: [
-                    Container(
-                        width: double.infinity,
-                        height: 260,
-                        // color: Colors.grey,
-                        child: Stack(children: [
-                          Image.network(
-                            "https://firebasestorage.googleapis.com/v0/b/social-app-2b7dd.appspot.com/o/posts%2FEgDtot0E3ZQ56qa8U0dMcNDwfg03%2F9ad533f0-779c-11ec-a8a8-3f9f6134b863?alt=media&token=c469a927-e12a-4bd4-8d2e-ca83207c3c03",
+                    SizedBox(
+                      width: double.infinity,
+                      height: 260,
+                      // color: Colors.grey,
+                      child: Stack(
+                        children: [
+                          // Image.network(
+                          //   "https://firebasestorage.googleapis.com/v0/b/social-app-2b7dd.appspot.com/o/posts%2FEgDtot0E3ZQ56qa8U0dMcNDwfg03%2F9ad533f0-779c-11ec-a8a8-3f9f6134b863?alt=media&token=c469a927-e12a-4bd4-8d2e-ca83207c3c03",
+                          //   // "https://i.ytimg.com/vi/LPe56fezmoo/maxresdefault.jpg",
+                          //   width: MediaQuery.of(context).size.width,
+                          //   height: 220,
+                          //   fit: BoxFit.cover,
+                          // ),
+                          Image.asset(
+                            "assets/images/placeholder_img.png",
                             // "https://i.ytimg.com/vi/LPe56fezmoo/maxresdefault.jpg",
                             width: MediaQuery.of(context).size.width,
                             height: 220,
@@ -161,16 +251,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   _image != null
                                       ? CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: MemoryImage(_image!),
-                                    backgroundColor: Colors.white,
-                                  )
-                                      : CircleAvatar(
-                                    radius: 40,
-                                    // backgroundImage: AssetImage('assets/images/default_profile_pic.png'),
-                                    backgroundImage: NetworkImage("${userData['photoUrl']}"),
-                                    backgroundColor: Colors.white,
-                                  ),
+                                          radius: 40,
+                                          backgroundImage: MemoryImage(_image!),
+                                          backgroundColor: Colors.white,
+                                        )
+                                      : returnProfilePicWidgetIfAvailable()
+                                  // CircleAvatar(
+                                  //   radius: 40,
+                                  //   // backgroundImage: AssetImage('assets/images/default_profile_pic.png'),
+                                  //   backgroundImage: returnProfilePicWidgetIfAvailable(),
+                                  //   // backgroundImage: (userData['photoUrl']!=null && userData['photoUrl'].toString().isNotEmpty) ? NetworkImage("${userData['photoUrl']}"):AssetImage('assets/images/default_profile_pic.png'),
+                                  //   backgroundColor: Colors.white,
+                                  // ),
                                   //todo uncomment to add change profile pic feature
                                   // Positioned(
                                   //   bottom: -12,
@@ -184,7 +276,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
                               ),
                             ),
-
                           ),
 
                           // Positioned(
@@ -200,7 +291,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           //     radius: 40,
                           //   ),
                           // ),
-
 
                           // Positioned(
                           //   child: Container(
@@ -219,10 +309,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           //     ),
                           //   ),
                           // ),
-                        ],),),
-                    SizedBox(
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(top: 15, bottom: 5),
                       width: double.infinity,
-                      height: 40,
+                      // height: 40,
                       // color: Colors.blue,
                       child: Center(
                         child: Text(
@@ -241,56 +334,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Center(
                         child: Text(
                           // "Full Name",
-                          userData['bio'],
+                          userData['fullName'],
                           style: const TextStyle(
                             fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // const SizedBox(
+                    //   height: 8,
+                    // ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(15,8,15,8),
+                      width: double.infinity,
+                      // color: Colors.blue,
+                      child: Center(
+                        child: Text(
+                          // "Full Name",
+                          userData['bio'],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
                             // fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     SizedBox(
                       width: 200,
                       height: 45,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(25),
-                        onTap: () {
-                          // showSnackBar(
-                          // msg: "Login... Will be implemented soon!", context: context, duration: 2000);
-                          signOutUser();
-                        },
-                        child: Ink(
-                          height: 45,
-                          // color: Colors.blue,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.blue[800],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "Logout",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                // fontFamily: 'Roboto-Regular',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      child:
+                        getLogoutOrMessageButton()
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     const Divider(),
                   ],
                 ),
-
                 FutureBuilder(
-                  future: FirebaseFirestore.instance
-                      .collection('posts')
-                      .where('uid', isEqualTo: widget.uid)
-                      .get(),
+                  future: FirebaseFirestore.instance.collection('posts').where('uid', isEqualTo: widget.uid).get(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
@@ -301,16 +388,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return GridView.builder(
                       shrinkWrap: true,
                       itemCount: (snapshot.data! as dynamic).docs.length,
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         crossAxisSpacing: 5,
                         mainAxisSpacing: 1.5,
                         childAspectRatio: 1,
                       ),
                       itemBuilder: (context, index) {
-                        DocumentSnapshot snap =
-                        (snapshot.data! as dynamic).docs[index];
+                        DocumentSnapshot snap = (snapshot.data! as dynamic).docs[index];
 
                         return Container(
                           child: Image(
@@ -322,7 +407,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                 )
-
               ],
             ),
 
@@ -488,6 +572,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
             //   ],
             // ),
           );
+  }
+
+  Widget getLogoutOrMessageButton() {
+
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(25),
+      onTap: () {
+        // showSnackBar(
+        // msg: "Logout... Will be implemented soon!", context: context, duration: 2000);
+        if(widget.uid==FirebaseAuth.instance.currentUser!.uid) {
+          signOutUser();
+        }else{
+          openMessageScreen();
+        }
+      },
+      child:
+      Ink(
+        height: 45,
+        // color: Colors.blue,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          color: appBlueColor,
+          // color: Colors.blue[800],
+        ),
+        child: Center(
+          child: Text(
+            (widget.uid==FirebaseAuth.instance.currentUser!.uid)?"Logout":"Message",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              // fontFamily: 'Roboto-Regular',
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
 // Column buildStatColumn(int num, String label) {

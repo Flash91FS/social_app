@@ -26,3 +26,5 @@ List<Widget> homeScreenItems = [
     uid: FirebaseAuth.instance.currentUser!.uid,
   ),
 ];
+
+bool darkMode = true;

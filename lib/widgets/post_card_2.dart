@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/models/user.dart' as model;
 import 'package:social_app/providers/user_provider.dart';
@@ -15,21 +16,21 @@ import 'package:social_app/widgets/like_animation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-const String TAG = "FS - PostCard - ";
+const String TAG = "FS - PostCard2 - ";
 
-class PostCard extends StatefulWidget {
+class PostCard2 extends StatefulWidget {
   final snap;
 
-  const PostCard({
+  const PostCard2({
     Key? key,
     required this.snap,
   }) : super(key: key);
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostCard2> createState() => _PostCard2State();
 }
 
-class _PostCardState extends State<PostCard> {
+class _PostCard2State extends State<PostCard2> {
   int commentLen = 0;
   double _cardRadius = 14.0;
   bool isLikeAnimating = false;
@@ -298,41 +299,41 @@ class _PostCardState extends State<PostCard> {
                       ),
                       widget.snap['uid'].toString() == user!.uid
                           ? IconButton(
-                              onPressed: () {
-                                log("$TAG overflow icon clicked");
-                                //todo show dialog below
-                                // showDialog(
-                                //   useRootNavigator: false,
-                                //   context: context,
-                                //   builder: (context) {
-                                //     return Dialog(
-                                //       child: ListView(
-                                //           padding: const EdgeInsets.symmetric(vertical: 16),
-                                //           shrinkWrap: true,
-                                //           children: [
-                                //             'Delete',
-                                //           ]
-                                //               .map(
-                                //                 (e) => InkWell(
-                                //                     child: Container(
-                                //                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                //                       child: Text(e),
-                                //                     ),
-                                //                     onTap: () {
-                                //                       deletePost(
-                                //                         widget.snap['postId'].toString(),
-                                //                       );
-                                //                       // remove the dialog box
-                                //                       Navigator.of(context).pop();
-                                //                     }),
-                                //               )
-                                //               .toList()),
-                                //     );
-                                //   },
-                                // );
-                              },
-                              icon: const Icon(Icons.more_vert),
-                            )
+                        onPressed: () {
+                          log("$TAG overflow icon clicked");
+                          //todo show dialog below
+                          // showDialog(
+                          //   useRootNavigator: false,
+                          //   context: context,
+                          //   builder: (context) {
+                          //     return Dialog(
+                          //       child: ListView(
+                          //           padding: const EdgeInsets.symmetric(vertical: 16),
+                          //           shrinkWrap: true,
+                          //           children: [
+                          //             'Delete',
+                          //           ]
+                          //               .map(
+                          //                 (e) => InkWell(
+                          //                     child: Container(
+                          //                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          //                       child: Text(e),
+                          //                     ),
+                          //                     onTap: () {
+                          //                       deletePost(
+                          //                         widget.snap['postId'].toString(),
+                          //                       );
+                          //                       // remove the dialog box
+                          //                       Navigator.of(context).pop();
+                          //                     }),
+                          //               )
+                          //               .toList()),
+                          //     );
+                          //   },
+                          // );
+                        },
+                        icon: const Icon(Icons.more_vert),
+                      )
                           : Container(),
                     ],
                   ),
@@ -369,8 +370,9 @@ class _PostCardState extends State<PostCard> {
                     children: <Widget>[
                       Container(
                         // color: Colors.blue,
+                        margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
                         height: 28,
-                        width: 40,
+                        width: 28,//40
                         child: LikeAnimation(
                           isAnimating: widget.snap['likes'].contains(user!.uid),
                           smallLike: true,
@@ -378,12 +380,12 @@ class _PostCardState extends State<PostCard> {
                             padding: const EdgeInsets.all(0.0),
                             icon: widget.snap['likes'].contains(user!.uid)
                                 ? const Icon(
-                                    Icons.favorite,
-                                    color: Colors.red,
-                                  )
+                              Icons.favorite,
+                              color: Colors.red,
+                            )
                                 : const Icon(
-                                    Icons.favorite_border,
-                                  ),
+                              Icons.favorite_border,
+                            ),
                             onPressed: () => FireStoreMethods().likePost(
                               widget.snap['postId'].toString(),
                               user!.uid,
@@ -391,6 +393,102 @@ class _PostCardState extends State<PostCard> {
                             ),
                           ),
                         ),
+                      ),
+
+                      Container(
+                        // color: Colors.purple,
+                        margin: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                        height: 22,
+                        width: 22,//40
+                        child: IconButton(
+                          icon: const Icon(
+                            CupertinoIcons.bubble_right,
+                            // Icons.comment_outlined,
+                          ),
+                          padding: const EdgeInsets.all(0.0),
+                          onPressed: () {
+                            log("$TAG comment icon pressed");
+                            openCommentsScreen(widget.snap['postId'].toString());
+                          },
+                        ),
+                      ),
+                      // IconButton(
+                      //     icon: const Icon(
+                      //       Icons.send,
+                      //     ),
+                      //     onPressed: () {}),
+                      // Expanded(
+                      //     child: Align(
+                      //       alignment: Alignment.bottomRight,
+                      //       child: IconButton(
+                      //           icon: const Icon(Icons.bookmark_border), onPressed: () {}),
+                      //     ))
+
+                      // Flexible(
+                      //   child: Container(),
+                      //   flex: 1,
+                      // ),
+                      // Padding(
+                      //   padding: const EdgeInsets.fromLTRB(12,0,12,0),
+                      //   child: GestureDetector(
+                      //     onTap: () {
+                      //       log("$TAG share pressed");
+                      //
+                      //     },
+                      //     child: ImageIcon(
+                      //       const AssetImage('assets/images/send_48.png'),
+                      //       size: 26,
+                      //       color: (darkMode ? iconColorLight : iconColorDark) ,//Colors.white,
+                      //     ),
+                      //   ),
+                      // ),
+
+
+                      // IconButton(
+                      //   icon: const Icon(
+                      //     Icons.share,
+                      //   ),
+                      //   padding: const EdgeInsets.all(0.0),
+                      //   onPressed: () {
+                      //     log("$TAG share pressed");
+                      //
+                      //   },
+                      // ),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 30,
+                  child: Row(
+                    children: <Widget>[
+                      // Container(
+                      //   // color: Colors.blue,
+                      //   height: 28,
+                      //   width: 40,
+                      //   child: LikeAnimation(
+                      //     isAnimating: widget.snap['likes'].contains(user!.uid),
+                      //     smallLike: true,
+                      //     child: IconButton(
+                      //       padding: const EdgeInsets.all(0.0),
+                      //       icon: widget.snap['likes'].contains(user!.uid)
+                      //           ? const Icon(
+                      //         Icons.favorite,
+                      //         color: Colors.red,
+                      //       )
+                      //           : const Icon(
+                      //         Icons.favorite_border,
+                      //       ),
+                      //       onPressed: () => FireStoreMethods().likePost(
+                      //         widget.snap['postId'].toString(),
+                      //         user!.uid,
+                      //         widget.snap['likes'],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(12,0,0,0),
                       ),
                       InkWell(
                           child: Container(
@@ -412,18 +510,25 @@ class _PostCardState extends State<PostCard> {
                           ),
                           onTap: () {
                             log("$TAG Likes pressed");
-                          }),
-
-                      IconButton(
-                        icon: const Icon(
-                          Icons.comment_outlined,
-                        ),
-                        padding: const EdgeInsets.all(0.0),
-                        onPressed: () {
-                          log("$TAG comment icon pressed");
-                          openCommentsScreen(widget.snap['postId'].toString());
-                        },
+                          },
                       ),
+
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(6,0,6,0),
+                        child: Center(
+                          child: Text("."),
+                        ),
+                      ),
+                      // IconButton(
+                      //   icon: const Icon(
+                      //     Icons.comment_outlined,
+                      //   ),
+                      //   padding: const EdgeInsets.all(0.0),
+                      //   onPressed: () {
+                      //     log("$TAG comment icon pressed");
+                      //     openCommentsScreen(widget.snap['postId'].toString());
+                      //   },
+                      // ),
                       InkWell(
                           child: Container(
                             child: Text(
@@ -444,14 +549,14 @@ class _PostCardState extends State<PostCard> {
                             log("$TAG comment text pressed");
                             openCommentsScreen(widget.snap['postId'].toString());
                           }
-                          // onTap: () => Navigator.of(context).push(
-                          //   MaterialPageRoute(
-                          //     builder: (context) => CommentsScreen(
-                          //       postId: widget.snap['postId'].toString(),
-                          //     ),
-                          //   ),
-                          // ),
-                          ),
+                        // onTap: () => Navigator.of(context).push(
+                        //   MaterialPageRoute(
+                        //     builder: (context) => CommentsScreen(
+                        //       postId: widget.snap['postId'].toString(),
+                        //     ),
+                        //   ),
+                        // ),
+                      ),
                       // IconButton(
                       //     icon: const Icon(
                       //       Icons.send,
@@ -593,18 +698,18 @@ class _PostCardState extends State<PostCard> {
 // import 'package:intl/intl.dart';
 // // import 'package:provider/provider.dart';
 //
-// class PostCard extends StatefulWidget {
+// class PostCard2 extends StatefulWidget {
 //   final snap;
-//   const PostCard({
+//   const PostCard2({
 //     Key? key,
 //     required this.snap,
 //   }) : super(key: key);
 //
 //   @override
-//   State<PostCard> createState() => _PostCardState();
+//   State<PostCard2> createState() => _PostCard2State();
 // }
 //
-// class _PostCardState extends State<PostCard> {
+// class _PostCard2State extends State<PostCard2> {
 //   int commentLen = 0;
 //   bool isLikeAnimating = false;
 //

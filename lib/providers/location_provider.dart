@@ -9,7 +9,7 @@ const String TAG = "FS - LocationProvider - ";
 class LocationProvider with ChangeNotifier {
   LocationData? _locationData;
   // final AuthMethods _authMethods = AuthMethods();
-  Location location = new Location();
+  Location location = Location();
 
   bool _locServiceEnabled = false;
   bool _locPermissionGranted = false;
@@ -20,8 +20,9 @@ class LocationProvider with ChangeNotifier {
   LocationData? get getLoc => _locationData;
 
   Future<LocationData> refreshLoc() async {
+    log("$TAG refreshLoc() called");
     LocationData locationData = await location.getLocation();
-    log("$TAG _locationData = $locationData");
+    log("$TAG refreshLoc(): _locationData = $locationData");
     _locationData = locationData;
     return locationData;
     // notifyListeners();

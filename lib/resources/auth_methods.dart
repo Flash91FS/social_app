@@ -6,6 +6,8 @@ import 'package:social_app/models/user.dart' as model;
 import 'package:social_app/resources/storage_methods.dart';
 import 'package:social_app/utils/utils.dart';
 
+const String TAG = "FS - AuthMethods - ";
+
 class AuthMethods {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,43 +26,21 @@ log("current user: UID == ${currentUser.uid}");
     required String email,
     required String pass,
     required String username,
-    required String bio,
-    required Uint8List imgFile,
+    required String fullName,
+    required Uint8List? imgFile,
   }) async {
     String res = "Some error occurred";
     try {
-      if (email.isNotEmpty && pass.isNotEmpty && username.isNotEmpty && bio.isNotEmpty && imgFile != null) {
+      if (email.isNotEmpty && pass.isNotEmpty && username.isNotEmpty && fullName.isNotEmpty) {
         // registering user in auth with email and password
         UserCredential cred = await _firebaseAuth.createUserWithEmailAndPassword(
           email: email,
           password: pass,
         );
-
-        String photoUrl = await StorageMethods().uploadImageToStorage('profilePics', imgFile, false);
-        //
-        model.User _user = model.User(
-          username: username,
-          uid: cred.user!.uid,
-          photoUrl: photoUrl,
-          email: email,
-          bio: bio,
-          followers: [],
-          following: [],
-        );
-
-        // adding user in our database
-        await _firestore.collection("users").doc(cred.user!.uid).set(_user.toJson());
-        // await _firestore.collection("users").doc(cred.user!.uid).set({
-        //   "username": username,
-        //   "uid": cred.user!.uid,
-        //   "photoUrl": photoUrl,
-        //   "email": email,
-        //   "bio": bio,
-        //   "followers": [],
-        //   "following": [],
-        // });
-
         res = "success";
+        res = await addUserToFirebaseDB(uid: cred.user!.uid, email: email, pass: pass, username: username, fullName: fullName, imgFile: imgFile);
+
+        // res = "success";
       } else {
         res = "Please enter all the fields";
       }
@@ -79,7 +59,75 @@ log("current user: UID == ${currentUser.uid}");
         res = "Too many requests from this device due to unusual activity. Try again later";
       }
     }
+    log("$TAG currentUser!.uid: ${FirebaseAuth.instance.currentUser!.uid}");
     return res;
+  }
+
+  //add user to Firebase DB method
+  Future<String> addUserToFirebaseDB({
+    required String uid,
+    required String email,
+    required String pass,
+    required String username,
+    required String fullName,
+    required Uint8List? imgFile,
+  }) async {
+    try {
+    String photoUrl = "";
+    if (imgFile != null) {
+      photoUrl = await StorageMethods().uploadImageToStorage('profilePics', imgFile, false);
+    }
+    //
+    model.User _user = model.User(
+      username: username,
+      uid: uid,
+      photoUrl: photoUrl,
+      email: email,
+      fullName: fullName,
+      bio: "",
+      followers: [],
+      following: [],
+    );
+
+    // adding user in our database
+    await _firestore.collection("users").doc(uid).set(_user.toJson());
+    // await _firestore.collection("users").doc(cred.user!.uid).set({
+    //   "username": username,
+    //   "uid": cred.user!.uid,
+    //   "photoUrl": photoUrl,
+    //   "email": email,
+    //   "bio": bio,
+    //   "followers": [],
+    //   "following": [],
+    // });
+    return "success";
+    } catch (e) {
+      String ress = e.toString();
+      return ress;
+    }
+  }
+
+  //set User ProfilePic And Bio to Firebase DB method
+  Future<String> setUserProfilePicAndBio({
+    required String uid,
+    required String bio,
+    required Uint8List? imgFile,
+  }) async {
+    try {
+      String photoUrl = "";
+      if (imgFile != null) {
+        photoUrl = await StorageMethods().uploadImageToStorage('profilePics', imgFile, false);
+      }
+      await _firestore.collection("users").doc(uid).update({
+        "uid": uid,
+        "photoUrl": photoUrl,
+        "bio": bio,
+      });
+      return "success";
+    } catch (e) {
+      String ress = e.toString();
+      return ress;
+    }
   }
 
   // logging in user

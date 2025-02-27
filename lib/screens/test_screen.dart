@@ -11,6 +11,8 @@ import 'package:social_app/utils/utils.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:flutter_svg/svg.dart';
 
+//todo Test screen  for testing Login screen design and Animations
+
 class TestScreen extends StatefulWidget {
   const TestScreen({Key? key, required this.title}) : super(key: key);
 

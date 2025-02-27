@@ -30,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void navigateToProfileScreen() {
+  void navigateToProfileEditScreen() {
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           // builder: (context) => const MobileScreenLayout(title: "Home screen"),
@@ -44,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void skip() {
     log("skip() called");
-    navigateToProfileScreen();
+    navigateToProfileEditScreen();
   }
 
   @override
@@ -179,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   borderRadius: BorderRadius.circular(25),
                   onTap: () {
                     if (currentIndex == contents.length - 1) {
-                      navigateToProfileScreen();
+                      navigateToProfileEditScreen();
                     }
                     _controller.nextPage(
                       duration: Duration(milliseconds: 100),

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:social_app/apis/api_helper.dart';
+import 'package:social_app/models/httpresponse.dart';
+import 'package:social_app/providers/login_prefs_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
 import 'package:provider/provider.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/screens/home_screen_layout.dart';
 import 'package:social_app/screens/mobile_screen_layout.dart';
 import 'package:social_app/screens/signup_screen.dart';
+import 'package:social_app/screens/signup_screen_new1.dart';
 import 'package:social_app/utils/colors.dart';
+import 'package:social_app/utils/global_variable.dart';
+import 'package:social_app/utils/login_prefs.dart';
 import 'package:social_app/utils/utils.dart';
 import 'package:social_app/widgets/loading_dialog.dart';
 import 'package:social_app/widgets/text_field_input.dart';
@@ -203,8 +209,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     initAndAnimateLogo();
   }
 
-  void loginUser() async {
-    log('loginUser():');
+  void loginUserViaFirebase() async {
+    log('$TAG loginUserViaFirebase():');
     // set loading to true
     // setState(() {
     //   _isLoading = true;
@@ -217,57 +223,156 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           return LoadingDialog();
         });
 
-    String res = await AuthMethods().loginUser(email: _emailController.text, password: _passwordController.text);
+    String res = await AuthMethods().loginUser(email: _emailController.text.trim(), password: _passwordController.text);
     if (res == 'success') {
+      log("$TAG success ---------------------------");
       try {
         Navigator.pop(dialogContext);
-        showSnackBar(msg: res, context: context, duration: 1500);
+        showSnackBar(msg: res, context: context, duration: 1000);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
-        Navigator.pop(dialogContext);
+        log("$TAG exception = ${exception.toString()}");
       } catch (error) {
         // executed for errors of all types other than Exception
-        Navigator.pop(dialogContext);
+        log("$TAG error = ${error.toString()}");
       }
 
-      navigateToHomeScreen();
+      Future.delayed(const Duration(milliseconds: 600), () {
+        log("$TAG calling navigateToHomeScreen() 600");
+        navigateToHomeScreen();
+        // setState(() {
+        //   fiveSecondsPassed = true;
+        // });
+      });
     } else {
       try {
         Navigator.pop(dialogContext);
         showSnackBar(msg: res, context: context, duration: 2500);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
-        Navigator.pop(dialogContext);
+        log("$TAG exception 2 = ${exception.toString()}");
       } catch (error) {
         // executed for errors of all types other than Exception
+        log("$TAG error 2 = ${error.toString()}");
+      }
+    }
+  }
+
+  void loginUserViaServer() async {
+    log('$TAG loginUserViaServer():');
+    // set loading to true
+    // setState(() {
+    //   _isLoading = true;
+    // });
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          dialogContext = context;
+          return LoadingDialog();
+        });
+
+    HTTPResponse<Map<String, dynamic>> response = await APIHelper.makeLoginRequest(email: _emailController.text.trim(), password: _passwordController.text);
+    // String res = await AuthMethods().loginUser(email: _emailController.text.trim(), password: _passwordController.text);
+    if (response.isSuccessful && response.data != null && response.data!.containsKey("data")) {
+      Map<String, dynamic> responseData = response.data!;
+      log("$TAG success --------------------------- responseData = ${responseData}");
+      bool loginSuccess = false;
+      try {
         Navigator.pop(dialogContext);
+        showSnackBar(msg: response.data!["status_message"], context: context, duration: 1000);
+        List data = responseData["data"];
+        if(data.isNotEmpty){
+          Map loginData = data[0];
+          if(loginData.isNotEmpty && loginData.containsKey("id")
+              && loginData.containsKey("name") && loginData.containsKey("email")
+              && loginData.containsKey("username")){
+            Map<String, dynamic> userDetails = {
+              "isLoggedIn": true,
+              "id": "${loginData['id']}",
+              "name": loginData["name"],
+              "email": loginData["email"],
+              "username": loginData["username"],
+            };
+            loginSuccess = true;
+            final LoginPrefsProvider loginPrefsProvider = Provider.of<LoginPrefsProvider>(context, listen: false);
+            loginPrefsProvider.setUserDetails(userDetails, true);
+          }
+        }
+      } on Exception catch (exception) {
+        // only executed if error is of type Exception
+        log("$TAG exception = ${exception.toString()}");
+      } catch (error) {
+        // executed for errors of all types other than Exception
+        log("$TAG error = ${error.toString()}");
+      }
+
+      if(loginSuccess){
+        log("$TAG login = true --------------------------- Go to HomeScreen");
+        Future.delayed(const Duration(milliseconds: 200), () {
+          log("$TAG calling navigateToHomeScreen() 200");
+          navigateToHomeScreen();
+          // setState(() {
+          //   fiveSecondsPassed = true;
+          // });
+        });
+      }else{
+        log("$TAG login = false --------------------------- No need to go to HomeScreen");
+      }
+    } else {
+      try {
+        Navigator.pop(dialogContext);
+        String message = response.message;
+        if (!response.isSuccessful){
+          message = response.message;
+        } else if (response.data != null && response.data!.containsKey("status_message")) {
+          message = response.data!["status_message"];
+          //todo make message something like, login unsuccessful, make sure email and password is valid
+        }
+        showSnackBar(msg: message, context: context, duration: 2500);
+      } on Exception catch (exception) {
+        // only executed if error is of type Exception
+        log("$TAG exception 2 = ${exception.toString()}");
+      } catch (error) {
+        // executed for errors of all types other than Exception
+        log("$TAG error 2 = ${error.toString()}");
       }
     }
   }
 
   void navigateToHomeScreen() {
     log("$TAG navigateToHomeScreen");
+    try {
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const MobileScreenLayout(title: "Home screen"),
         ),
         (route) => false);
+    } on Exception catch (exception) {
+      // only executed if error is of type Exception
+      log("$TAG exception 3 = ${exception.toString()}");
+    } catch (error) {
+      // executed for errors of all types other than Exception
+      log("$TAG error 3 = ${error.toString()}");
+    }
   }
 
   void navigateToSignUpScreen() {
     log("$TAG navigateToSignUpScreen");
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => const SignupScreen(),
+        builder: (context) => const SignupScreenNew1(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    log('$TAG build():');
     final model = Provider.of<LoginProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.black,
       resizeToAvoidBottomInset: false,
 
       // appBar: AppBar(
@@ -577,7 +682,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           //     userNameController.text.trim(), passwordController.text.trim(), context).then((User? user) {
 
                                           // signInRequest(_passwordController.text.trim(), _passwordController.text.trim());
-                                          loginUser();
+                                          if(attachedToFirebase){
+                                            loginUserViaFirebase();
+                                          }else{
+                                            loginUserViaServer();
+                                          }
                                           // }).catchError((e){
                                           //       if(e.message == "The email address is already in use by another account."){
                                           //         showAlertDialog(context, e.toString());

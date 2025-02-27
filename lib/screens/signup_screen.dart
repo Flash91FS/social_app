@@ -9,6 +9,7 @@ import 'package:social_app/models/user.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
 import 'package:social_app/screens/home_screen_layout.dart';
+import 'package:social_app/screens/login_screen_new1.dart';
 import 'package:social_app/screens/mobile_screen_layout.dart';
 import 'package:social_app/screens/onboarding_screen.dart';
 import 'package:social_app/screens/profile_pic_screen.dart';
@@ -429,7 +430,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   // }
 
   void signUpUser() async {
-    log('signUpUser():');
+    log('$TAG signUpUser():');
     // set loading to true
     // setState(() {
     //   _isLoading = true;
@@ -473,10 +474,10 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
         showSnackBar(msg: res, context: context, duration: 1500);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
-        Navigator.pop(dialogContext);
+        log("$TAG exception = ${exception.toString()}");
       } catch (error) {
         // executed for errors of all types other than Exception
-        Navigator.pop(dialogContext);
+        log("$TAG error = ${error.toString()}");
       }
 
       // Navigator.of(context).pushAndRemoveUntil(
@@ -509,10 +510,10 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
         showSnackBar(msg: res, context: context, duration: 2500);
       } on Exception catch (exception) {
         // only executed if error is of type Exception
-        Navigator.pop(dialogContext);
+        log("$TAG exception 2 = ${exception.toString()}");
       } catch (error) {
         // executed for errors of all types other than Exception
-        Navigator.pop(dialogContext);
+        log("$TAG error 2 = ${error.toString()}");
       }
     }
   }
@@ -520,17 +521,18 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   void navigateToLogin() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
+        builder: (context) => const LoginScreenNew1(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-
+    log('$TAG build():');
     final model = Provider.of<LoginProvider>(context);
     // SingleChildScrollView
     return Scaffold(
+      backgroundColor: Colors.black,
       // resizeToAvoidBottomInset: false,
       // appBar: AppBar(
       //   // Here we take the value from the MyHomePage object that was created by
@@ -576,7 +578,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
                   const Text(
                     'Signup',
                     style: TextStyle(
-                      // color: Colors.black,
+                      color: Colors.white,
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
                       // fontFamily: 'Roboto-Regular',
@@ -862,7 +864,13 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        child: const Text("Already have an account? "),
+                        child: const Text("Already have an account? ",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            // fontSize: 30,
+                            // fontWeight: FontWeight.bold,
+                            // fontFamily: 'Roboto-Regular',
+                          ),),
                         padding: const EdgeInsets.symmetric(vertical: 18),
                       ),
                       GestureDetector(

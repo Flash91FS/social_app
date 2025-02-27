@@ -33,7 +33,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -52,7 +52,7 @@ android {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.app.social.social_app"
         minSdkVersion 20 // due to dependencies requirements
-        targetSdkVersion 30
+        targetSdkVersion 32
         multiDexEnabled true //multidex
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

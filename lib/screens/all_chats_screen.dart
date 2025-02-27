@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/models/user.dart';
+import 'package:social_app/providers/dark_theme_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/firestore_methods.dart';
 import 'package:social_app/utils/colors.dart';
@@ -116,12 +117,21 @@ class _AllChatsScreenState extends State<AllChatsScreen> {
   @override
   Widget build(BuildContext context) {
     // final User user = Provider.of<UserProvider>(context).getUser;
+    bool darkMode = updateThemeWithSystem();
+    DarkThemeProvider _darkThemeProvider = Provider.of(context);
+    _darkThemeProvider.setSysDarkTheme(darkMode);
+    log("$TAG build(): darkMode == ${darkMode}");
 
     return Scaffold(
+      backgroundColor: darkMode ? cardColorDark : cardColorLight,
       appBar: AppBar(
-        backgroundColor: darkAppBarColor,
-        title: const Text(
+        iconTheme: IconThemeData(color: darkMode ? Colors.white:Colors.black),
+        backgroundColor: darkMode ? mobileBackgroundColor : mobileBackgroundColorLight, //
+        title: Text(
           'Chats',
+          style: TextStyle(
+            color: darkMode ? Colors.white : Colors.black,
+          ),
         ),
         centerTitle: false,
       ),
@@ -159,6 +169,7 @@ class _AllChatsScreenState extends State<AllChatsScreen> {
                           // physics: const BouncingScrollPhysics(),
                           itemCount: snapshot.data!.docs.length,
                           itemBuilder: (ctx, index) => LastChatCard(
+                            darkMode: darkMode,
                             snap: snapshot.data!.docs[index],
                           ),
                         );

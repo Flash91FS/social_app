@@ -7,7 +7,8 @@ class MessageCard extends StatelessWidget {
   final snap;
   final bool isSender;
   final double verticalPadding;
-  const MessageCard({Key? key, required this.snap, this.isSender = true, this.verticalPadding = 5}) : super(key: key);
+  final bool darkMode;
+  const MessageCard({Key? key, required this.snap, this.isSender = true, required this.darkMode, this.verticalPadding = 5}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class MessageCard extends StatelessWidget {
           BubbleNormal(
             text: '${snap.data()['text']}',
             isSender: isSender,
-            color: isSender?chatBubbleSenderColor:chatBubbleFriendColor,
+            color: isSender ? chatBubbleSenderColor : chatBubbleFriendColor,
             tail: true,
             textStyle: TextStyle(
               fontSize: 15,
@@ -36,7 +37,9 @@ class MessageCard extends StatelessWidget {
                           snap.data()['datePublished'].toDate(),
                         ),
                         style: const TextStyle(
-                          fontSize: 9, fontWeight: FontWeight.w400,),
+                          fontSize: 9, fontWeight: FontWeight.w400,
+                          color: secondaryColor,
+                        ),
                       ),
                     )
           // Container(

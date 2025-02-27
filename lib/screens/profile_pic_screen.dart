@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:social_app/widgets/text_field_input.dart';
 import 'package:social_app/models/user.dart' as model;
 
+import '../providers/dark_theme_provider.dart';
 import 'mobile_screen_layout.dart';
 
 const String TAG = "FS - ProfilePicScreen - ";
@@ -39,6 +41,7 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
   Uint8List? _file;
   bool isLoading = false;
   final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
   String profilePicURLInFirebase = "";
 
   // final TextEditingController _spotTitleController = TextEditingController();
@@ -49,7 +52,7 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
       context: parentContext,
       builder: (BuildContext context) {
         return SimpleDialog(
-          title: const Text('Create a Post'),
+          title: const Text('Add Profile Picture'),
           children: <Widget>[
             SimpleDialogOption(
                 padding: const EdgeInsets.all(20),
@@ -88,10 +91,42 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
     log("$TAG getUserData(): currentUser!.uid: ${FirebaseAuth.instance.currentUser!.uid}");
     UserProvider _userProvider = Provider.of(context, listen: false);
     await _userProvider.refreshUser();
-    model.User user = _userProvider.getUser;
-    log("$TAG getUserData(): currentUser!.uid: ${user.uid}");
-    profilePicURLInFirebase = user.photoUrl;
-    log("$TAG getUserData(): profilePicURLInFirebase: ${profilePicURLInFirebase}");
+
+    String? bio = "";
+    String? fullName = "";
+    try {
+      if (_userProvider != null && _userProvider.getUser != null && _userProvider.getUser.photoUrl != null) {
+        log("$TAG getUserData(): currentUser!.uid: ${_userProvider.getUser.uid}");
+        profilePicURLInFirebase = _userProvider.getUser.photoUrl;
+        log("$TAG getUserData(): profilePicURL In Firebase: $profilePicURLInFirebase");
+
+        bio = _userProvider.getUser.bio;
+        fullName = _userProvider.getUser.fullName;
+
+        if (bio == null) {
+          bio = "";
+        }
+        if (fullName == null) {
+          fullName = "";
+        }
+      } else {
+        if (_userProvider == null) {
+          log("$TAG getUserData(): userProvider == null");
+        } else if (_userProvider.getUser == null) {
+          log("$TAG getUserData(): userProvider.getUser == null");
+        } else if (_userProvider.getUser.photoUrl == null) {
+          log("$TAG getUserData(): userProvider.getUser.photoUrl == null");
+        }
+      }
+    } catch (e) {
+      log("$TAG build(): Error: ${e.toString()}");
+    }
+    if (bio != null) {
+      _bioController.text = bio;
+    }
+    if (fullName != null) {
+      _fullNameController.text = fullName;
+    }
   }
 
   void addUserProfilePicAndBio(String uid, String username, String profImage) async {
@@ -100,7 +135,7 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
     //   msg: "add post image ... will be implemented soon",
     // );
     FocusScope.of(context).unfocus();
-    log('addUserProfilePicAndBio clicked');
+    log('$TAG addUserProfilePicAndBio clicked');
     bool error = false;
     String errorMsg = "Oops! Something went wrong.";
 
@@ -114,37 +149,66 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
     //   error = true;
     // }
 
-    log('Error: $error');
-    log('ErrorMsg: $errorMsg');
-    if ((_file != null || _bioController.text.trim().isNotEmpty) && !error) {
-      log('addUserProfilePicAndBio(): calling setUserProfilePicAndBio API');
+    log('$TAG Error: $error');
+    log('$TAG ErrorMsg: $errorMsg');
+    if ((_file != null || _bioController.text.trim().isNotEmpty || _fullNameController.text.trim().isNotEmpty) &&
+        !error) {
+      log('$TAG addUserProfilePicAndBio(): calling setUserProfilePicAndBio API');
       setState(() {
         isLoading = true;
       });
       // start the loading
       try {
         // upload profile pic to Firebase DB
-        String res = await AuthMethods().setUserProfilePicAndBio(
+        Map<String, String> result = await AuthMethods().setUserProfilePicAndBio(
           uid: uid,
+          fullName: _fullNameController.text,
           bio: _bioController.text,
+          oldPhotoUrl: profilePicURLInFirebase,
           imgFile: _file,
         );
-        log("Result (uploadPost) : $res");
+        log("$TAG Result (uploadPost) : $result");
+        String? res = result['result'];
+        log("$TAG Result (uploadPost) : $result");
         if (res == "success") {
-          setState(() {
-            isLoading = false;
-          });
-          showSnackBar(context: context, msg: 'Profile Picture Added Successfully!', duration: 2500);
-          clearImage();
           if (widget.fromSignUp) {
             log("$TAG going to HomeScreen");
+            setState(() {
+              isLoading = false;
+            });
+            showSnackBar(context: context, msg: 'Profile Updated Successfully!', duration: 2500);
+            clearImage();
             goToHomeScreen();
           } else {
             log("$TAG going back");
-            goBack();
+
+            String photoUrl = '';
+            if (result.containsKey("photoUrl")) {
+              photoUrl = result['photoUrl'] ?? '';
+            }
+            dynamic postSnap = await FirebaseFirestore.instance.collection('posts').where('uid', isEqualTo: uid).get();
+            for (var doc in postSnap.docs) {
+              // log("$TAG navigateToProfileEditScreen(): post = ${doc.data()}");
+              final postId = doc.data()['postId'];
+              log("$TAG navigateToProfileEditScreen(): postId: = $postId");
+              try {
+                await FirebaseFirestore.instance.collection("posts").doc(postId).update({
+                  "profImage": photoUrl,
+                });
+              } catch (e) {
+                log("$TAG navigateToProfileEditScreen(): Error == ${e.toString()}");
+              }
+            }
+
+            setState(() {
+              isLoading = false;
+            });
+            showSnackBar(context: context, msg: 'Profile Updated Successfully!', duration: 2500);
+            clearImage();
+            goBack(true);
           }
         } else {
-          showSnackBar(context: context, msg: res);
+          showSnackBar(context: context, msg: res.toString());
         }
       } catch (err) {
         setState(() {
@@ -158,7 +222,13 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
       }
     } else {
       // showSnackBar(msg: errorMsg, context: context, duration: 2000);
-      goToHomeScreen();
+      if (widget.fromSignUp) {
+        log("$TAG going to HomeScreen");
+        goToHomeScreen();
+      } else {
+        log("$TAG going back");
+        goBack(false);
+      }
     }
   }
 
@@ -167,15 +237,16 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
         MaterialPageRoute(
           builder: (context) => const MobileScreenLayout(title: "Home screen"),
         ),
-            (route) => false);
+        (route) => false);
   }
+
   void skip() {
     goToHomeScreen();
   }
 
-  void goBack() {
+  void goBack(bool anythingChanged) {
     _file = null;
-    Navigator.pop(context);
+    Navigator.pop(context, anythingChanged);
   }
 
   void clearImage() {
@@ -187,8 +258,7 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
   @override
   void dispose() {
     _bioController.dispose();
-    // _spotTitleController.dispose();
-    // _categoryController.dispose();
+    _fullNameController.dispose();
     super.dispose();
   }
 
@@ -200,34 +270,36 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
 
   Widget returnProfilePicWidgetIfAvailable() {
     return Consumer<UserProvider>(
-      builder: (_, provider, __) => provider.getProfilePicURL==""
+      builder: (_, provider, __) => provider.getProfilePicURL == ""
           ? Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.grey[900],
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.add,
-          ),
-          // child: IconButton(
-          //   icon: Icon(Icons.add,),
-          //   onPressed: (){
-          //     _selectImage(context);
-          //     },
-          // ),
-        ),
-      )
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[900],
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.add,
+                ),
+                // child: IconButton(
+                //   icon: Icon(Icons.add,),
+                //   onPressed: (){
+                //     _selectImage(context);
+                //     },
+                // ),
+              ),
+            )
           : Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.grey[900],
-            image: DecorationImage(
-              fit: BoxFit.contain,
-              alignment: FractionalOffset.topCenter,
-              image: FadeInImage.assetNetwork(placeholder: "assets/images/placeholder_img.png", image: provider.getProfilePicURL).image,
-            )),
-      ),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey[900],
+                  image: DecorationImage(
+                    fit: BoxFit.contain,
+                    alignment: FractionalOffset.topCenter,
+                    image: FadeInImage.assetNetwork(
+                            placeholder: "assets/images/placeholder_img.png", image: provider.getProfilePicURL)
+                        .image,
+                  )),
+            ),
     );
     // if (picURL == "") {
     //   return Container(
@@ -263,31 +335,13 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider userProvider = Provider.of<UserProvider>(context);
-    String? bio="";
-    try {
-      if (userProvider != null && userProvider.getUser != null && userProvider.getUser.photoUrl != null) {
-        log("$TAG build(): profileIMG in Firebase: ${userProvider.getUser.photoUrl}");
-        bio=userProvider.getUser.bio;
+    bool darkMode = false;
+    darkMode = updateThemeWithSystem();
+    DarkThemeProvider _darkThemeProvider = Provider.of(context);
+    _darkThemeProvider.setSysDarkTheme(darkMode);
+    log("$TAG build(): darkMode == ${darkMode}");
 
-        if(bio==null) {
-          bio = "";
-        }
-      } else {
-        if (userProvider == null) {
-          log("$TAG build(): userProvider == null");
-        } else if (userProvider.getUser == null) {
-          log("$TAG build(): userProvider.getUser == null");
-        } else if (userProvider.getUser.photoUrl == null) {
-          log("$TAG build(): userProvider.getUser.photoUrl == null");
-        }
-      }
-    } catch (e) {
-      log("$TAG build(): Error: ${e.toString()}");
-    }
-    if(bio!=null) {
-      _bioController.text = bio;
-    }
+    final UserProvider userProvider = Provider.of<UserProvider>(context);
     // return _file == null
     //     ? Center(
     //   child: IconButton(
@@ -305,12 +359,14 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
         leading: (widget.showBackButton)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: goBack,
+                onPressed: () => goBack(false),
               )
             : null,
-        title: const Text(
-          'Add Profile Picture',
-        ),
+        title: widget.fromSignUp
+            ? const Text(
+                'Add Profile Picture',
+              )
+            : const Text('Edit Profile'),
         centerTitle: true,
         actions: (widget.showSkipButton)
             ? <Widget>[
@@ -375,12 +431,12 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               child: Center(
                 child: Text(
-                  "Let's build your profile",
-                  style: TextStyle(
+                  widget.fromSignUp ? "Let's build your profile" : "Update your profile details",
+                  style: const TextStyle(
                     // color: Colors.white,
                     fontSize: 18,
                     // fontFamily: 'Roboto-Regular',
@@ -392,9 +448,21 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 child: TextFieldInput(
+                  hintText: 'Full Name',
+                  textInputType: TextInputType.name,
+                  textEditingController: _fullNameController,
+                  darkBackground: darkMode,
+                ),
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                child: TextFieldInput(
                   hintText: 'Add your bio',
                   textInputType: TextInputType.text,
                   textEditingController: _bioController,
+                  darkBackground: darkMode,
                   maxLines: 4,
                 ),
               ),
@@ -418,11 +486,17 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
                     // onTap: () {
                     //   showSnackBar(msg: "Add Spot... Will be implemented soon!", context: context, duration: 2000);
                     // },
-                    onTap: () => addUserProfilePicAndBio(
-                      userProvider.getUser.uid,
-                      userProvider.getUser.username,
-                      userProvider.getUser.photoUrl,
-                    ),
+                    onTap: () {
+                      if (!isLoading) {
+                        addUserProfilePicAndBio(
+                          userProvider.getUser.uid,
+                          userProvider.getUser.username,
+                          userProvider.getUser.photoUrl,
+                        );
+                      } else {
+                        showSnackBar(context: context, msg: 'Already uploading, please wait!', duration: 1500);
+                      }
+                    },
                     child: Ink(
                       height: 45,
                       // color: Colors.blue,
@@ -513,5 +587,4 @@ class _ProfilePicScreenState extends State<ProfilePicScreen> {
       ),
     );
   }
-
 }

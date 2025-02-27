@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:social_app/models/post.dart';
 import 'package:social_app/resources/storage_methods.dart';
+import 'package:social_app/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class FireStoreMethods {
@@ -12,7 +13,8 @@ class FireStoreMethods {
     String title,
     String description,
     String category,
-    Uint8List file,
+    String categoryID,
+    Uint8List? file,
     String uid,
     String username,
     String profImage,
@@ -22,21 +24,78 @@ class FireStoreMethods {
     // asking uid here because we dont want to make extra calls to firebase auth when we can just get from our state management
     String res = "Some error occurred";
     try {
-      String photoUrl = await StorageMethods().uploadImageToStorage('posts', file, true);
+      String photoUrl = "";
+      if (file != null) {
+        await StorageMethods().uploadImageToStorage('posts', file, true);
+      }
       String postId = const Uuid().v1(); // creates unique id based on time
       Post post = Post(
         title: title,
         description: description,
         category: category,
+        categoryID: categoryID,
         uid: uid,
         username: username,
         likes: [],
         postId: postId,
         datePublished: DateTime.now(),
         postUrl: photoUrl,
+        imagesList: [],
+        multiImages: "0",
         profImage: profImage,
         lat: lat,
         lng: lng,
+        videoURL: "",
+        hasVideo: "",
+      );
+      _firestore.collection('posts').doc(postId).set(post.toJson());
+      res = "success";
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  Future<String> uploadPostMultiImages(
+      String title,
+      String description,
+      String category,
+      String categoryID,
+      List<Uint8List> imgList,
+      String uid,
+      String username,
+      String profImage,
+      String lat,
+      String lng,
+      ) async {
+    // asking uid here because we dont want to make extra calls to firebase auth when we can just get from our state management
+    String res = "Some error occurred";
+    try {
+      List photoUrlsList = [];
+      for (Uint8List img in imgList){
+        String photoUrl = await StorageMethods().uploadImageToStorage('posts', img, true);
+        photoUrlsList.add(photoUrl);
+      }
+      // String photoUrl = await StorageMethods().uploadImageToStorage('posts', file, true);
+      String postId = const Uuid().v1(); // creates unique id based on time
+      Post post = Post(
+        title: title,
+        description: description,
+        category: category,
+        categoryID: categoryID,
+        uid: uid,
+        username: username,
+        likes: [],
+        postId: postId,
+        datePublished: DateTime.now(),
+        postUrl: "",
+        imagesList: photoUrlsList,
+        multiImages: "1",
+        profImage: profImage,
+        lat: lat,
+        lng: lng,
+        videoURL: "",
+        hasVideo: "",
       );
       _firestore.collection('posts').doc(postId).set(post.toJson());
       res = "success";
@@ -67,12 +126,61 @@ class FireStoreMethods {
     return res;
   }
 
+  Future<String> likeComment(String postId,String commentId, String uid, List likes) async {
+    log("FirebaseMethods -- likeComment() :");
+    String res = "Some error occurred";
+    try {
+      if (likes.contains(uid)) {
+        // if the likes list contains the user uid, we need to remove it
+        _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).update({
+          'likes': FieldValue.arrayRemove([uid])
+        });
+      } else {
+        // else we need to add uid to the likes array
+        _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).update({
+          'likes': FieldValue.arrayUnion([uid])
+        });
+      }
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+      log("FirebaseMethods -- likeComment() : Exception : ${err.toString()}");
+    }
+    return res;
+  }
+
+  Future<String> likeReply(String postId,String commentId,String replyId, String uid, List likes) async {
+    log("FirebaseMethods -- likeReply() :");
+    log("FirebaseMethods -- likeReply() : postId == $postId");
+    log("FirebaseMethods -- likeReply() : commentId == $commentId");
+    log("FirebaseMethods -- likeReply() : replyId == $replyId");
+    log("FirebaseMethods -- likeReply() : uid == $uid");
+    String res = "Some error occurred";
+    try {
+      if (likes.contains(uid)) {
+        // if the likes list contains the user uid, we need to remove it
+        _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).collection('replies').doc(replyId).update({
+          'likes': FieldValue.arrayRemove([uid])
+        });
+      } else {
+        // else we need to add uid to the likes array
+        _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).collection('replies').doc(replyId).update({
+          'likes': FieldValue.arrayUnion([uid])
+        });
+      }
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+      log("FirebaseMethods -- likeReply() : Exception : ${err.toString()}");
+    }
+    return res;
+  }
+
   // Post comment
   Future<String> postComment(String postId, String text, String uid, String name, String profilePic) async {
     String res = "Some error occurred";
     try {
       if (text.isNotEmpty) {
-        // if the likes list contains the user uid, we need to remove it
         String commentId = const Uuid().v1();
         _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).set({
           'profilePic': profilePic,
@@ -88,6 +196,33 @@ class FireStoreMethods {
       }
     } catch (err) {
       res = err.toString();
+      log("FirebaseMethods -- postComment() : Exception : ${err.toString()}");
+    }
+    return res;
+  }
+
+  // Post comment
+  Future<String> postReply(String postId, String commentId, String text, String uid, String name, String profilePic) async {
+    String res = "Some error occurred";
+    try {
+      if (text.isNotEmpty) {
+        // if the likes list contains the user uid, we need to remove it
+        String replyId = const Uuid().v1();
+        _firestore.collection('posts').doc(postId).collection('comments').doc(commentId).collection('replies').doc(replyId).set({
+          'profilePic': profilePic,
+          'name': name,
+          'uid': uid,
+          'text': text,
+          'replyId': replyId,
+          'datePublished': DateTime.now(),
+        });
+        res = 'success';
+      } else {
+        res = "Please enter text";
+      }
+    } catch (err) {
+      res = err.toString();
+      log("FirebaseMethods -- postReply() : Exception : ${err.toString()}");
     }
     return res;
   }
@@ -169,6 +304,22 @@ class FireStoreMethods {
       } else {
         res = "Please enter text";
       }
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  // Post comment
+  Future<String> postAppAllowed(String allowed) async {
+    String res = "Some error occurred";
+    var mDate = DateTime.now();
+    try {
+        _firestore.collection('appAllowed').doc("some-random-id").set({
+          'isAllowed': allowed,
+          'datePublished': mDate,
+        });
+        res = 'success';
     } catch (err) {
       res = err.toString();
     }

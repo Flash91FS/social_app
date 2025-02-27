@@ -23,15 +23,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Privacy Camera Usage</string>
+	<string>To capture user profile/post image</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Location Usage</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location Usage</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Mic Usage</string>
+	<string>To capture audio while recording videos to upload for a post created by user</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo Library Usage</string>
+	<string>To choose user profile/post image from gallery</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -49,5 +49,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 </dict>
 </plist>

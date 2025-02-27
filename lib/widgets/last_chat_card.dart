@@ -7,7 +7,8 @@ import 'package:social_app/utils/utils.dart';
 class LastChatCard extends StatelessWidget {
   final snap;
   final double verticalPadding;
-  const LastChatCard({Key? key, required this.snap, this.verticalPadding = 5}) : super(key: key);
+  final bool darkMode;
+  const LastChatCard({Key? key, required this.snap, required this.darkMode, this.verticalPadding = 5}) : super(key: key);
 
 
   Widget returnProfilePicWidgetIfAvailable(String? photoUrl, {double mRadius = 18}) {
@@ -56,6 +57,7 @@ class LastChatCard extends StatelessWidget {
       child: Wrap(
         children: [
           Container(
+            color: darkMode ? cardColorDark : cardColorLight,
             padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: 16),
             child: Row(
               children: [
@@ -76,7 +78,7 @@ class LastChatCard extends StatelessWidget {
                       children: [
                         Text(
                             snap.data()['friendName'],
-                            style: const TextStyle(fontWeight: FontWeight.w500,
+                            style: TextStyle(fontWeight: FontWeight.w500, color: darkMode ? Colors.white : Colors.black,
                             fontSize: 16),
                         ),
                         SizedBox(height: 5,),
@@ -84,6 +86,7 @@ class LastChatCard extends StatelessWidget {
                           '${snap.data()['text']}',
                             maxLines:2,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: darkMode ? Colors.white : Colors.black),
                         ),
                         //DATE Section
                         // Padding(
@@ -105,8 +108,8 @@ class LastChatCard extends StatelessWidget {
                   child: Text(
                     "${difference} ${suffex}",
                     // "${difference} ${suffex} ago",
-                    style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w400,),
+                    style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w400, color: darkMode ? Colors.white : Colors.black,),
                   ),
                 )
               ],

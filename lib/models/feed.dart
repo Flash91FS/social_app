@@ -1,19 +1,25 @@
+import 'package:social_app/utils/utils.dart';
+
+import 'likes.dart';
+
 class Feed {
   int? id;
-  String? userId;
-  String? categoryId;
+  int? userId;
+  int? categoryId;
   String? title;
   String? description;
   String? location;
   String? latitude;
   String? longitude;
   String? createdAt;
-  String? likesCount;
-  String? commentsCount;
+  int? likesCount;
+  int? commentsCount;
   User? user;
   Category? category;
-  Image? image;
-  Null? video;
+  FeedImage? image;
+  Video? video;
+  List<Likes>? likes;
+  List<Comments>? comments;
 
   Feed(
       {this.id,
@@ -33,23 +39,40 @@ class Feed {
         this.video});
 
   Feed.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    userId = json['user_id'];
-    categoryId = json['category_id'];
-    title = json['title'];
-    description = json['description'];
-    location = json['location'];
-    latitude = json['latitude'];
-    longitude = json['longitude'];
-    createdAt = json['created_at'];
-    likesCount = json['likes_count'];
-    commentsCount = json['comments_count'];
-    user = json['user'] != null ? new User.fromJson(json['user']) : null;
-    category = json['category'] != null
-        ? new Category.fromJson(json['category'])
-        : null;
-    image = json['image'] != null ? new Image.fromJson(json['image']) : null;
-    video = json['video'];
+    try {
+      id = json['id'];
+      userId = json['user_id'];
+      categoryId = json['category_id'];
+      title = json['title'];
+      description = json['description'];
+      location = json['location'];
+      latitude = json['latitude'];
+      longitude = json['longitude'];
+      createdAt = json['created_at'];
+      likesCount = json['likes_count'];
+      commentsCount = json['comments_count'];
+      user = json['user'] != null ? new User.fromJson(json['user']) : null;
+      category = json['category'] != null
+              ? new Category.fromJson(json['category'])
+              : null;
+      image = json['image'] != null ? new FeedImage.fromJson(json['image']) : null;
+      // video = json['video'];
+      video = json['video'] != null ? new Video.fromJson(json['video']) : null;
+      if (json['likes'] != null) {
+        likes = <Likes>[];
+        json['likes'].forEach((v) {
+          likes!.add(new Likes.fromJson(v));
+        });
+      }
+      if (json['comments'] != null) {
+        comments = <Comments>[];
+        json['comments'].forEach((v) {
+          comments!.add(new Comments.fromJson(v));
+        });
+      }
+    } catch (e) {
+      log("Feed.fromJson:  Error == "+e.toString());
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -74,7 +97,16 @@ class Feed {
     if (this.image != null) {
       data['image'] = this.image!.toJson();
     }
-    data['video'] = this.video;
+    // data['video'] = this.video;
+    if (this.video != null) {
+      data['video'] = this.video!.toJson();
+    }
+    if (this.likes != null) {
+      data['likes'] = this.likes!.map((v) => v.toJson()).toList();
+    }
+    if (this.comments != null) {
+      data['comments'] = this.comments!.map((v) => v.toJson()).toList();
+    }
     return data;
   }
 }
@@ -133,7 +165,7 @@ class User {
 
 class Profile {
   int? id;
-  String? userId;
+  int? userId;
   String? profile;
   Null? cover;
 
@@ -178,14 +210,36 @@ class Category {
   }
 }
 
-class Image {
+class Video {
   int? id;
-  String? newsFeedId;
+  int? newsFeedId;
+  String? video;
+
+  Video({this.id, this.newsFeedId, this.video});
+
+  Video.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    newsFeedId = json['news_feed_id'];
+    video = json['video'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['news_feed_id'] = this.newsFeedId;
+    data['video'] = this.video;
+    return data;
+  }
+}
+
+class FeedImage {
+  int? id;
+  int? newsFeedId;
   String? image;
 
-  Image({this.id, this.newsFeedId, this.image});
+  FeedImage({this.id, this.newsFeedId, this.image});
 
-  Image.fromJson(Map<String, dynamic> json) {
+  FeedImage.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     newsFeedId = json['news_feed_id'];
     image = json['image'];
@@ -196,6 +250,66 @@ class Image {
     data['id'] = this.id;
     data['news_feed_id'] = this.newsFeedId;
     data['image'] = this.image;
+    return data;
+  }
+}
+
+// class Likes {
+//   int? id;
+//   int? newsFeedId;
+//   int? userId;
+//   String? status;
+//   User? user;
+//
+//   Likes({this.id, this.newsFeedId, this.userId, this.status, this.user});
+//
+//   Likes.fromJson(Map<String, dynamic> json) {
+//     id = json['id'];
+//     newsFeedId = json['news_feed_id'];
+//     userId = json['user_id'];
+//     status = json['status'];
+//     user = json['user'] != null ? new User.fromJson(json['user']) : null;
+//   }
+//
+//   Map<String, dynamic> toJson() {
+//     final Map<String, dynamic> data = new Map<String, dynamic>();
+//     data['id'] = this.id;
+//     data['news_feed_id'] = this.newsFeedId;
+//     data['user_id'] = this.userId;
+//     data['status'] = this.status;
+//     if (this.user != null) {
+//       data['user'] = this.user!.toJson();
+//     }
+//     return data;
+//   }
+// }
+
+class Comments {
+  int? id;
+  int? newsFeedId;
+  int? userId;
+  String? comment;
+  User? user;
+
+  Comments({this.id, this.newsFeedId, this.userId, this.comment, this.user});
+
+  Comments.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    newsFeedId = json['news_feed_id'];
+    userId = json['user_id'];
+    comment = json['comment'];
+    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['news_feed_id'] = this.newsFeedId;
+    data['user_id'] = this.userId;
+    data['comment'] = this.comment;
+    if (this.user != null) {
+      data['user'] = this.user!.toJson();
+    }
     return data;
   }
 }

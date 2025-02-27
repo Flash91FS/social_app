@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,9 @@ import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
 import 'package:social_app/screens/login_screen.dart';
+import 'package:social_app/screens/login_screen_new1.dart';
+import 'package:social_app/screens/profile_screen_new1.dart';
+import 'package:social_app/utils/global_variable.dart';
 import 'package:social_app/widgets/loading_dialog.dart';
 import 'package:social_app/widgets/text_field_input.dart';
 import 'package:social_app/widgets/text_field_widget.dart';
@@ -13,8 +17,14 @@ import 'package:social_app/utils/utils.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:flutter_svg/svg.dart';
 
+import 'default_not_allowed_screen.dart';
+import 'firebase_side/add_post_screen_2.dart';
+import 'mobile_screen_layout.dart';
+
+const String TAG = "FS - HomeScreenLayout - ";
+
 class HomeScreenLayout extends StatefulWidget {
-  const HomeScreenLayout({Key? key, required this.title}) : super(key: key);
+  const HomeScreenLayout({Key? key, required this.title, required this.allowed, required this.userDetails}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -26,6 +36,8 @@ class HomeScreenLayout extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final String allowed;
+  final Map<String, dynamic> userDetails;
 
   @override
   State<HomeScreenLayout> createState() => _HomeScreenLayoutState();
@@ -57,7 +69,7 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
     showSnackBar(msg: "Sign Out Success!", context: context, duration: 500);
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
+          builder: (context) => const LoginScreenNew1(),
         ),
         (route) => false);
   }
@@ -65,7 +77,7 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<LoginProvider>(context);
-
+    return widget.allowed != "5" ? getAllowedScreens() : getNotAllowedDefaultScreen();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       // appBar: AppBar(
@@ -259,5 +271,88 @@ class _HomeScreenLayoutState extends State<HomeScreenLayout> with SingleTickerPr
         ),
       ),
     );
+  }
+
+  getAllowedScreens() {
+    log("$TAG getAllowedScreens():");
+    if (attachedToFirebase) {
+      return
+        StreamBuilder(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.active) {
+              log("$TAG snapshot.connectionState == ConnectionState.active");
+              // Checking if the snapshot has any data or not
+              if (snapshot.hasData) {
+                log("$TAG snapshot.hasData");
+                // if snapshot has data which means user is logged in then we check the width of screen and accordingly display the screen layout
+                // return AllPostsScreen(key: const PageStorageKey<String>('AllPostsScreen'), darkMode: false);
+
+                return const MobileScreenLayout(
+                  title: 'Home Page',
+                );
+                //todo testing screens below
+                // return ProfileScreenNew1(
+                //   key: const PageStorageKey<String>('ProfileScreen'),
+                //   darkMode: true,
+                //   uid: FirebaseAuth.instance.currentUser!.uid,
+                // );
+                // return TestHomePage();
+                // return const ChewieDemo();
+                // return const ProfilePicScreen(showBackButton: false, showSkipButton: false,);
+                // return const AddPostScreen2(loc: null);
+
+                // bool darkMode = updateThemeWithSystem();
+                // return FeedScreen(darkMode: darkMode);
+              } else if (snapshot.hasError) {
+                log("$TAG snapshot.hasError");
+                return Center(
+                  child: Text('${snapshot.error}'),
+                );
+              }
+            }
+
+            // means connection to future hasnt been made yet
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              log("$TAG snapshot.connectionState == ConnectionState.waiting");
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            log("$TAG snapshot.connectionState == ${snapshot.connectionState}");
+            // return const TestScreen(title: "Test");
+            // return const ProfilePicScreen(showBackButton: false, showSkipButton: false,);
+            return const LoginScreenNew1();
+          },
+        );
+    } else {
+      return getLoginOrHomeScreenForUser();
+    }
+  }
+
+  getLoginOrHomeScreenForUser() {
+    log("$TAG getLoginOrHomeScreenForUser(): userDetails = ${widget.userDetails}");
+    log("$TAG getLoginOrHomeScreenForUser(): userDetails.isEmpty = ${widget.userDetails.isEmpty}");
+    if(widget.userDetails.isEmpty){
+      log("$TAG getLoginOrHomeScreenForUser(): show CircularProgressIndicator");
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if(widget.userDetails.isNotEmpty && widget.userDetails.containsKey("isLoggedIn") && widget.userDetails["isLoggedIn"] == true){
+      log("$TAG getLoginOrHomeScreenForUser(): show MobileScreenLayout");
+      // return AllPostsScreen(key: const PageStorageKey<String>('AllPostsScreen'), darkMode: false);
+      return const MobileScreenLayout(
+        title: 'Home Page',
+      );
+    } else {
+      log("$TAG getLoginOrHomeScreenForUser(): show LoginScreen");
+      return const LoginScreenNew1();
+    }
+  }
+
+  getNotAllowedDefaultScreen() {
+    log("$TAG getNotAllowedDefaultScreen == DefaultNotAllowedScreen");
+    return DefaultNotAllowedScreen();
   }
 }

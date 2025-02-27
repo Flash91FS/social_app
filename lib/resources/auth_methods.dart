@@ -41,6 +41,7 @@ log("current user: UID == ${currentUser.uid}");
         res = await addUserToFirebaseDB(uid: cred.user!.uid, email: email, pass: pass, username: username, fullName: fullName, imgFile: imgFile);
 
         // res = "success";
+        log("$TAG currentUser!.uid: ${FirebaseAuth.instance.currentUser!.uid}");
       } else {
         res = "Please enter all the fields";
       }
@@ -59,7 +60,6 @@ log("current user: UID == ${currentUser.uid}");
         res = "Too many requests from this device due to unusual activity. Try again later";
       }
     }
-    log("$TAG currentUser!.uid: ${FirebaseAuth.instance.currentUser!.uid}");
     return res;
   }
 
@@ -108,25 +108,37 @@ log("current user: UID == ${currentUser.uid}");
   }
 
   //set User ProfilePic And Bio to Firebase DB method
-  Future<String> setUserProfilePicAndBio({
+  Future<Map<String, String>> setUserProfilePicAndBio({
     required String uid,
+    required String fullName,
     required String bio,
+    required String oldPhotoUrl,
     required Uint8List? imgFile,
   }) async {
     try {
       String photoUrl = "";
       if (imgFile != null) {
         photoUrl = await StorageMethods().uploadImageToStorage('profilePics', imgFile, false);
+      }else{
+        photoUrl = oldPhotoUrl;
       }
       await _firestore.collection("users").doc(uid).update({
         "uid": uid,
+        "fullName": fullName,
         "photoUrl": photoUrl,
         "bio": bio,
       });
-      return "success";
+      Map<String, String> resultMap = {
+        "result": "success",
+        "photoUrl": photoUrl,
+      };
+      return resultMap;
     } catch (e) {
       String ress = e.toString();
-      return ress;
+      Map<String, String> resultMap = {
+        "result": ress,
+      };
+      return resultMap;
     }
   }
 

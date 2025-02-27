@@ -1,24 +1,31 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:social_app/models/user.dart';
+import 'package:social_app/providers/dark_theme_provider.dart';
 import 'package:social_app/providers/login_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/auth_methods.dart';
+import 'package:social_app/screens/login_screen_new1.dart';
+import 'package:social_app/screens/profile_screen_new1.dart';
+import 'package:social_app/screens/server_side/all_feed_screen.dart';
+import 'package:social_app/screens/firebase_side/all_posts_screen.dart';
 import 'package:social_app/screens/login_screen.dart';
-import 'package:social_app/screens/map_screen.dart';
+import 'package:social_app/screens/firebase_side/map_screen.dart';
 import 'package:social_app/screens/profile_screen.dart';
+import 'package:social_app/screens/server_side/feed_map_screen.dart';
 import 'package:social_app/utils/global_variable.dart';
+import 'package:social_app/widgets/keep_alive_page.dart';
 import 'package:social_app/widgets/loading_dialog.dart';
 import 'package:social_app/widgets/text_field_input.dart';
 import 'package:social_app/widgets/text_field_widget.dart';
 import 'package:social_app/utils/utils.dart';
 import 'package:social_app/utils/colors.dart';
 import 'package:flutter_svg/svg.dart';
-
-import 'add_post_screen.dart';
-import 'feed_screen.dart';
 
 const String TAG = "FS - MobileScreenLayout - ";
 
@@ -51,8 +58,17 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> with SingleTick
   @override
   void initState() {
     super.initState();
+    // var brightness = SchedulerBinding.instance!.window.platformBrightness;
+    // bool isDarkMode = brightness == Brightness.dark;
+    bool isDarkMode = updateThemeWithSystem();
+    log("$TAG initState(): darkMode == ${isDarkMode}");
     getData();
     pageController = PageController();
+  }
+
+  @override
+  bool get wantKeepAlive {
+    return true;
   }
 
   @override
@@ -85,14 +101,22 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> with SingleTick
     showSnackBar(msg: "Sign Out Success!", context: context, duration: 500);
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
+          builder: (context) => const LoginScreenNew1(),
         ),
         (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
+    log("$TAG build(): called ---");
+
     final model = Provider.of<LoginProvider>(context);
+    // final themeChange = Provider.of<DarkThemeProvider>(context);
+    // bool darkMode = themeChange.darkTheme;
+    bool darkMode = updateThemeWithSystem();
+    DarkThemeProvider _darkThemeProvider = Provider.of(context, listen: false);
+    _darkThemeProvider.setSysDarkTheme(darkMode);
+    log("$TAG build(): darkMode == ${darkMode}");
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -133,154 +157,263 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> with SingleTick
       //     ),
       //   ],
       // ),
+      backgroundColor: darkMode ? mobileBackgroundColor : mobileBackgroundColorLight3, //
       bottomNavigationBar: SafeArea(
-        child: Container(
-          // color: Colors.black,
-          color: darkMode ? bottomNavBarColor : bottomNavBarColorLight,//
-          height: kToolbarHeight,
-          child: Row(
-            children: [
-              Flexible(
-                child: InkWell(
-                  onTap: () {
-                    navigationTapped(0);
-                    },
-                  child: Container(
-                    child: Center(
-                      child: Column(
-                        // direction: Axis.vertical,
-                        children: [
-                          SizedBox(
-                            width: 38,
-                            height: 38,
-                            // color: Colors.deepPurple,
-                            child: Center(
-                              child: ImageIcon(
-                                const AssetImage('assets/images/feed_icon.png'),
-                                size: 32,
-                                color: (_page == 0) ? appBlueColorLight : (darkMode ? iconColorLight : iconColorDark),//Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            child: Text(
-                              'Feed',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: (_page == 0) ? appBlueColor : (darkMode ? iconColorLight : iconColorDark),//Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+        child: Wrap(
+          children: [
+            Container(
+              // color: Colors.blue,
+              height: 2,
+
+              decoration: BoxDecoration(
+                // color: Colors.blue,
+                gradient: LinearGradient(colors: [
+                  darkMode ? bottomBarShadowDark1 : bottomBarShadowLight1, //Color(0x44606060),
+                  darkMode ? bottomBarShadowDark2 : bottomBarShadowLight2, //Color(0x44606060),
+                  // Color(0x00FFFFFF),
+                ], stops: [
+                  0.0,
+                  100.0
+                ], begin: FractionalOffset.bottomCenter, end: FractionalOffset.topCenter, tileMode: TileMode.repeated),
               ),
-              Flexible(
-                child: InkWell(
-                  onTap: () {
-                    navigationTapped(1);
-                    },
-                  child: Container(
-                    // color: Colors.red,
-                    child: Center(
-                      child: Column(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        // direction: Axis.vertical,//used for Wrap only, not for Column
-                        children: [
-                          SizedBox(
-                              width: 38,
-                              height: 38,
-                              // color: Colors.deepPurple,
-                              child: Image.asset(
-                                "assets/images/round_map_icon.png",
+            ),
+            Container(
+              // color: Colors.black,
+              color: darkMode ? bottomNavBarColor : bottomNavBarColorLight, //
+              // margin: const EdgeInsets.only(top: 4.5), //Same as `blurRadius` i guess
+              // decoration: BoxDecoration(
+              //   // borderRadius: BorderRadius.circular(3.0),
+              //   // color: Colors.blue[100],
+              //   color: darkMode ? bottomNavBarColor : bottomNavBarColorLight,//
+              //   boxShadow: [
+              //     BoxShadow(
+              //       color: darkMode ? Color(0x889E9E9E):Color(0x889E9E9E),
+              //       offset: Offset(0.0, 1.0), //(x,y)
+              //       blurRadius: 5.0,
+              //     ),
+              //   ],
+              // ),
+              height: kToolbarHeight,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: InkWell(
+                      onTap: () {
+                        navigationTapped(0);
+                      },
+                      child: Container(
+                        child: Center(
+                          child: Column(
+                            // direction: Axis.vertical,
+                            children: [
+                              // SizedBox(
+                              //   width: 38,
+                              //   height: 38,
+                              //   // color: Colors.deepPurple,
+                              //   child: Center(
+                              //     child: ImageIcon(
+                              //       const AssetImage('assets/images/feed_icon.png'),
+                              //       size: 32,
+                              //       color: (_page == 0)
+                              //           ? appBlueColorLight
+                              //           : (darkMode ? iconColorLight : iconColorDark), //Colors.white,
+                              //     ),
+                              //   ),
+                              // ),
+                              Container(
                                 width: 38,
                                 height: 38,
-                                fit: BoxFit.cover,
-                              )),
-                          // ImageIcon(
-                          //   AssetImage('assets/images/round_map_icon.png'),
-                          //   size: 28,
-                          //   // color: Colors.yellow,
-                          // ),
-                          SizedBox(
-                            // color: Colors.deepPurple,
-                            width: MediaQuery.of(context).size.width / 3,
-                            child: Text(
-                              'Map',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: (_page == 1) ? appBlueColor : (darkMode ? iconColorLight : iconColorDark),//Colors.white,
+                                padding: const EdgeInsets.all(6),
+                                // color: Colors.deepPurple,
+                                // child: Image.asset(
+                                //   (_page == 0)
+                                //       ? "assets/images/ic_1_selected.png"
+                                //       : "assets/images/ic_1_unselected.png",
+                                //   color: (_page != 0 && !darkMode) ? Colors.grey[600] : null,
+                                //   width: 32,
+                                //   height: 32,
+                                //   fit: BoxFit.cover,
+                                // ),
+                                child: FaIcon(FontAwesomeIcons.solidNewspaper, color: (_page == 0)
+                                    ? appBlueColorOld
+                                    : (darkMode ? iconColorLight : iconColorDark),
+                                ),
                               ),
-                            ),
+                              SizedBox(
+                                child: Text(
+                                  'Feed',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: (_page == 0)
+                                        ? appBlueColorOld
+                                        : (darkMode ? iconColorLight : iconColorDark), //Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Flexible(
-                child: InkWell(
-                  onTap: () {
-                    navigationTapped(2);
-                    },
-                  child: Container(
-                    child: Center(
-                      child: Column(
-                        // direction: Axis.vertical,
-                        children: [
-                          SizedBox(
-                            width: 38,
-                            height: 38,
-                            // color: Colors.blue,
-                            child: Center(
-                              // color: Colors.deepPurple,
-                              // width: 32,
-                              // height: 32,
-                              child: ImageIcon(
-                                const AssetImage('assets/images/profile_icon.png'),
-                                size: 32,
-                                color: (_page == 2) ? appBlueColorLight : (darkMode ? iconColorLight : iconColorDark),//Colors.white,
+                  Flexible(
+                    child: InkWell(
+                      onTap: () {
+                        navigationTapped(1);
+                      },
+                      child: Container(
+                        // color: Colors.red,
+                        child: Center(
+                          child: Column(
+                            // mainAxisAlignment: MainAxisAlignment.center,
+                            // direction: Axis.vertical,//used for Wrap only, not for Column
+                            children: [
+                              // SizedBox(
+                              //     width: 38,
+                              //     height: 38,
+                              //     // color: Colors.deepPurple,
+                              //   child: Image.asset(
+                              //     "assets/images/round_map_icon.png",
+                              //     width: 38,
+                              //     height: 38,
+                              //     fit: BoxFit.cover,
+                              //   ),
+                              //   // child: Icon(MdiIcons.fromString('image-marker-outline'),
+                              //   //   color: (_page == 1)
+                              //   //       ? appBlueColorOld
+                              //   //       : (darkMode ? iconColorLight : iconColorDark),
+                              //   // ),
+                              // ),
+                              Container(
+                                width: 38,
+                                height: 38,
+                                // padding: const EdgeInsets.all(3),
+                                // child: Image.asset(
+                                //   (_page == 1)
+                                //       ? "assets/images/ic_2_selected.png"
+                                //       // : "assets/images/new_map_icon.png",
+                                //       : "assets/images/ic_2_unselected.png",
+                                //   color: (_page != 1 && !darkMode) ? Colors.grey[600] : null,
+                                //   width: 32,
+                                //   height: 32,
+                                //   fit: BoxFit.cover,
+                                // ),
+                                padding: const EdgeInsets.all(6),
+                                child: FaIcon(FontAwesomeIcons.mapLocation, color: (_page == 1)
+                                    ? appBlueColorOld
+                                    : (darkMode ? iconColorLight : iconColorDark),
+                                ),
                               ),
-                            ),
-                          ),
-                          SizedBox(
-                            // color: Colors.deepPurple,
-                            width: MediaQuery.of(context).size.width / 3,
-                            child: Text(
-                              'Profile',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: (_page == 2) ? appBlueColor : (darkMode ? iconColorLight : iconColorDark),//Colors.white,
+                              // ImageIcon(
+                              //   AssetImage('assets/images/round_map_icon.png'),
+                              //   size: 28,
+                              //   // color: Colors.yellow,
+                              // ),
+                              SizedBox(
+                                // color: Colors.deepPurple,
+                                // width: MediaQuery.of(context).size.width / 3,
+                                child: Text(
+                                  'Map',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: (_page == 1)
+                                        ? appBlueColorOld
+                                        : (darkMode ? iconColorLight : iconColorDark), //Colors.white,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  Flexible(
+                    child: InkWell(
+                      onTap: () {
+                        navigationTapped(2);
+                      },
+                      child: Container(
+                        child: Center(
+                          child: Column(
+                            // direction: Axis.vertical,
+                            children: [
+                              // SizedBox(
+                              //   width: 38,
+                              //   height: 38,
+                              //   // color: Colors.blue,
+                              //   child: Center(
+                              //     // color: Colors.deepPurple,
+                              //     // width: 32,
+                              //     // height: 32,
+                              //     child: ImageIcon(
+                              //       const AssetImage('assets/images/profile_icon.png'),
+                              //       size: 32,
+                              //       color: (_page == 2)
+                              //           ? appBlueColorLight
+                              //           : (darkMode ? iconColorLight : iconColorDark), //Colors.white,
+                              //     ),
+                              //   ),
+                              // ),
+                              Container(
+                                width: 38,
+                                height: 38,
+                                // padding: const EdgeInsets.fromLTRB(8,4,8,4),
+                                padding: const EdgeInsets.all(6),
+                                // color: Colors.deepPurple,
+                                // child: Image.asset(
+                                //   (_page == 2)
+                                //       ? "assets/images/ic_3_selected.png"
+                                //       : "assets/images/ic_3_unselected.png",
+                                //   color: (_page != 2 && !darkMode) ? Colors.grey[600] : null,
+                                //   width: 32,
+                                //   height: 32,
+                                //   fit: BoxFit.cover,
+                                // ),
+                                child: FaIcon(FontAwesomeIcons.solidUser, color: (_page == 2)
+                                    ? appBlueColorOld
+                                    : (darkMode ? iconColorLight : iconColorDark),
+                                ),
+                              ),
+                              SizedBox(
+                                // color: Colors.deepPurple,
+                                // width: MediaQuery.of(context).size.width / 3,
+                                child: Text(
+                                  'Profile',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: (_page == 2)
+                                        ? appBlueColorOld
+                                        : (darkMode ? iconColorLight : iconColorDark), //Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Flexible(
+                  //   child: Container(
+                  //     color: Colors.green,
+                  //   ),
+                  // ),
+                  // Flexible(
+                  //   child: Container(
+                  //     color: Colors.red,
+                  //   ),
+                  // ),
+                ],
               ),
-              // Flexible(
-              //   child: Container(
-              //     color: Colors.green,
-              //   ),
-              // ),
-              // Flexible(
-              //   child: Container(
-              //     color: Colors.red,
-              //   ),
-              // ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       // bottomNavigationBar: CupertinoTabBar(
@@ -349,11 +482,21 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> with SingleTick
       body: PageView(
         // children: homeScreenItems,
         children: [
-          const FeedScreen(),
-          // const AddPostScreen(),
-          const MapScreen(),
+          // KeepAlivePage(child:FeedScreen(key: const PageStorageKey<String>('FeedScreen'), darkMode: darkMode),),
+          // KeepAlivePage(child: MapScreen(key: const PageStorageKey<String>('MapScreen'), darkMode: darkMode),),
+          // KeepAlivePage(child:ProfileScreen(key: const PageStorageKey<String>('ProfileScreen'),uid: FirebaseAuth.instance.currentUser!.uid,)),
+
+          attachedToFirebase
+              ? AllPostsScreen(key: const PageStorageKey<String>('AllPostsScreen'), darkMode: darkMode)
+              : AllFeedScreen(key: const PageStorageKey<String>('AllFeedScreen'), darkMode: darkMode),
+          // AddPostScreen(),
+          attachedToFirebase
+              ? MapScreen(key: const PageStorageKey<String>('MapScreen'), darkMode: darkMode)
+              : FeedMapScreen(key: const PageStorageKey<String>('FeedMapScreen'), darkMode: darkMode),
           // const HomeScreenLayout(title: "Home screen"),
-          ProfileScreen(
+          ProfileScreenNew1(
+            key: const PageStorageKey<String>('ProfileScreen'),
+            darkMode: darkMode,
             uid: FirebaseAuth.instance.currentUser!.uid,
           ),
         ],

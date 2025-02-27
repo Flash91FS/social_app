@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/models/user.dart' as model;
+import 'package:social_app/providers/dark_theme_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/firestore_methods.dart';
 import 'package:social_app/utils/colors.dart';
@@ -199,14 +200,23 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     final model.User user = Provider.of<UserProvider>(context).getUser;
+    bool darkMode = updateThemeWithSystem();
+    DarkThemeProvider _darkThemeProvider = Provider.of(context);
+    _darkThemeProvider.setSysDarkTheme(darkMode);
+    log("$TAG build(): darkMode == ${darkMode}");
 
     return Scaffold(
+      backgroundColor: darkMode ? cardColorDark : cardColorLight,
       appBar: AppBar(
+        iconTheme: IconThemeData(color: darkMode ? Colors.white:Colors.black),
         elevation: 3.0,
-        backgroundColor: darkAppBarColor,
+        backgroundColor: darkMode ? mobileBackgroundColor : mobileBackgroundColorLight, //
         title: Text(
           widget.name,
           // 'Message',
+          style: TextStyle(
+            color: darkMode ? Colors.white : Colors.black,
+          ),
         ),
         centerTitle: false,
         actions: [
@@ -263,6 +273,7 @@ class _MessageScreenState extends State<MessageScreen> {
                             itemCount: snapshot.data!.docs.length,
                             itemBuilder: (ctx, index) => MessageCard(
                               snap: snapshot.data!.docs[index],
+                              darkMode: darkMode,
                               isSender:
                                   snapshot.data!.docs[index]["senderID"] == FirebaseAuth.instance.currentUser!.uid,
                             ),
@@ -317,7 +328,7 @@ class _MessageScreenState extends State<MessageScreen> {
       // text input
       bottomNavigationBar: SafeArea(
         child: Container(
-          color: Colors.grey[900],
+          color: darkMode ? Colors.grey[900] : Colors.grey[200],
           height: kToolbarHeight,
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           padding: const EdgeInsets.only(left: 16, right: 8),
@@ -336,6 +347,12 @@ class _MessageScreenState extends State<MessageScreen> {
                     decoration: InputDecoration(
                       hintText: 'Type your message',
                       border: InputBorder.none,
+                      hintStyle: TextStyle(
+                        color: darkMode ? hintTextColorDark : hintTextColorLight,
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: darkMode ? textColorDark : textColorLight,
                     ),
                   ),
                 ),

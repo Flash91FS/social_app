@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/models/user.dart' as model;
+import 'package:social_app/providers/dark_theme_provider.dart';
 import 'package:social_app/providers/user_provider.dart';
 import 'package:social_app/resources/firestore_methods.dart';
-import 'package:social_app/screens/comments_screen.dart';
-import 'package:social_app/screens/post_details_screen.dart';
+import 'package:social_app/screens/firebase_side/comments_screen.dart';
+import 'package:social_app/screens/firebase_side/post_details_screen.dart';
 import 'package:social_app/screens/profile_screen.dart';
+import 'package:social_app/screens/profile_screen_new1.dart';
 
 // import 'package:social_app/screens/comments_screen.dart';
 import 'package:social_app/utils/colors.dart';
@@ -100,9 +102,17 @@ class _PostCard2State extends State<PostCard2> {
 
   void openUserProfileScreen(String uid) {
     log("openUserProfileScreen()");
+    //---------------------------------------------
+    bool darkMode = false;
+    darkMode = updateThemeWithSystem();
+    DarkThemeProvider _darkThemeProvider = Provider.of(context);
+    _darkThemeProvider.setSysDarkTheme(darkMode);
+    log("$TAG build(): darkMode == ${darkMode}");
+    //---------------------------------------------
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) =>
-          ProfileScreen(
+          ProfileScreenNew1(
+            darkMode: darkMode,
             uid: uid,
             showBackButton: true,
           ),
@@ -145,13 +155,20 @@ class _PostCard2State extends State<PostCard2> {
           // ),
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
           child: Container(
-            // color: Colors.grey[850],
-            decoration: BoxDecoration(
+            // color: cardColorDark,
+            decoration: BoxDecoration( // to apply shadows to the card
+              boxShadow: const [
+                BoxShadow(
+                  color: darkCardShadowColor,
+                  offset: Offset(0.0, 1.0), //(x,y)
+                  blurRadius: 4.0,
+                ),
+              ],
               // border: Border.all(
-              //   color: mobileBackgroundColor,
+              //   color: mobileBackgroundColorLight,
               // ),
               borderRadius: BorderRadius.circular(_cardRadius),
-              color: Colors.grey[850], // mobileBackgroundColor,
+              color: cardColorDark, // cardColorLight, // mobileBackgroundColorLight,
             ),
             child: Column(
               children: [
@@ -180,15 +197,28 @@ class _PostCard2State extends State<PostCard2> {
                     children: [
                       Container(
                         // color: Colors.grey[900],
-                        height: MediaQuery.of(context).size.height * 0.34,
+                        height: MediaQuery.of(context).size.height * 0.4,
                         width: double.infinity,
                         // child: Image.network(
                         //   widget.snap['postUrl'].toString(),
                         //   fit: BoxFit.cover,
                         // ),
                         // child: Image.asset("assets/images/placeholder_img.png",),
-                        child: FadeInImage.assetNetwork(
-                            placeholder: "assets/images/placeholder_img.png", image: "${widget.snap['postUrl']}"),
+
+                        child: ClipRRect( // using ClipRRect as Image's parent (and Container's child) coz Container's decoration doesn't apply on front Image
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(_cardRadius),
+                            topRight: Radius.circular(_cardRadius),
+                          ),
+                          child: FadeInImage.assetNetwork(
+                              fit: coverFit ? BoxFit.cover : BoxFit.contain,
+                              placeholder: "assets/images/placeholder_img.png",
+                              image: showUnsplashImage ? unsplashImageURL : "${widget.snap['postUrl']}"),
+                        ),
+                        //todo uncomment to see actual pic
+                        // child: FadeInImage.assetNetwork(
+                        //     fit:coverFit ? BoxFit.cover : BoxFit.contain,
+                        //     placeholder: "assets/images/placeholder_img.png", image: "${widget.snap['postUrl']}"),
 
                         decoration: BoxDecoration(
                           // border: Border.all(
@@ -248,7 +278,7 @@ class _PostCard2State extends State<PostCard2> {
                         child: CircleAvatar(
                           radius: 16,
                           backgroundImage: NetworkImage(
-                            widget.snap['profImage'].toString(),
+                            showUnsplashImage ? unsplashImageURL : widget.snap['profImage'].toString(),
                           ),
                         ),
                       ),
